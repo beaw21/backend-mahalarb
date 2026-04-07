@@ -8,6 +8,7 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static("public"));
 
 /////////////////////////////////////////
 // 🔐 CONNECT SUPABASE (ใช้ ENV)
@@ -18,13 +19,6 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
-/////////////////////////////////////////
-// 🟢 ROOT (เช็คว่า server รันอยู่ไหม)
-/////////////////////////////////////////
-
-app.get("/", (req, res) => {
-  res.send("API is running 🚀");
-});
 
 /////////////////////////////////////////
 // 🟢 1. GET MENU
