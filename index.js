@@ -1,16 +1,30 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static('.'))
+
+/////////////////////////////////////////
+// 🔐 CONNECT SUPABASE (ใช้ ENV)
+/////////////////////////////////////////
 
 const supabase = createClient(
-  "https://iknwgxxclnddoisgujzc.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlrbndneHhjbG5kZG9pc2d1anpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTI5Njk4NiwiZXhwIjoyMDkwODcyOTg2fQ.YwgDRR_fe2CEOe8cuxh6UxV-wRCl63w3sAzS6NJXDIg",
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
 );
+
+/////////////////////////////////////////
+// 🟢 ROOT (เช็คว่า server รันอยู่ไหม)
+/////////////////////////////////////////
+
+app.get("/", (req, res) => {
+  res.send("API is running 🚀");
+});
 
 /////////////////////////////////////////
 // 🟢 1. GET MENU
