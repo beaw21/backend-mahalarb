@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static('.'))
 
 const supabase = createClient(
   "https://iknwgxxclnddoisgujzc.supabase.co",
@@ -217,6 +218,7 @@ app.get("/dashboard", async (req, res) => {
 });
 
 /////////////////////////////////////////
+
 app.listen(3000, () => {
   console.log("Server running on https://backend-mahalarb.onrender.com");
 });
