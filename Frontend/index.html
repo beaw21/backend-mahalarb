@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Restaurant Backend</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      text-align: center;
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      margin-bottom: 30px;
+    }
+
+    .btn {
+      display: block;
+      width: 250px;
+      margin: 15px auto;
+      padding: 15px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .menu {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .orders {
+      background: #2196F3;
+      color: white;
+    }
+
+    .dashboard {
+      background: #FF9800;
+      color: white;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>🍽️ ระบบหลังบ้านร้านอาหาร</h1>
+
+    <button class="btn menu" onclick="goToPage('menu.html')">
+      📋 จัดการเมนู
+    </button>
+
+    <button class="btn orders" onclick="goToPage('orders.html')">
+      🧾 จัดการออเดอร์
+    </button>
+
+    <button class="btn dashboard" onclick="goToPage('dashboard.html')">
+      📊 ภาพรวมร้าน
+    </button>
+  </div>
+
+  <script>
+    function goToPage(page) {
+      window.location.href = page;
+    }
+  </script>
+
+</body>
+</html>
