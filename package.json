@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "type": "module",
   "description": "",
-  
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
@@ -11,15 +10,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/beaw21/backend-mahalarb-.git"
+    "url": "git+https://github.com/beaw21/backend-mahalarb.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/beaw21/backend-mahalarb-/issues"
+    "url": "https://github.com/beaw21/backend-mahalarb/issues"
   },
-  "homepage": "https://github.com/beaw21/backend-mahalarb-#readme",
+  "homepage": "https://github.com/beaw21/backend-mahalarb#readme",
   "dependencies": {
     "@supabase/supabase-js": "^2.101.1",
     "cors": "^2.8.6",
