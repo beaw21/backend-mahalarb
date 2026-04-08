@@ -118,12 +118,12 @@
   <div id="menu"></div>
 
   <script>
-    const API_URL = "https://backend-mahalarb.onrender.com/menu";
+    const API_URL = "https://backend-mahalarb.onrender.com";
 
     let allData = [];
 
     async function fetchMenu() {
-      const res = await fetch(API_URL);
+      const res = await fetch(`${API_URL}/menu`);
       const data = await res.json();
 
       allData = data;
@@ -227,7 +227,7 @@
       }
 
       try {
-        const res = await fetch(API_URL, {
+        const res = await fetch(`${API_URL}/menu`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
