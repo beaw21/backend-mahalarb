@@ -15,15 +15,11 @@ app.use(express.static("public"));
 /////////////////////////////////////////
 
 const supabase = createClient(
-  process.env.SUPABASE_URL,
+  process.env.SUPABASE_URL, 
   process.env.SUPABASE_KEY
 );
 
 const PORT = process.env.PORT || 3000;
-
-
-const cors = require("cors");
-app.use(cors());
 
 
 /////////////////////////////////////////
