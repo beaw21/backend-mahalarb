@@ -19,6 +19,12 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
+const PORT = process.env.PORT || 3000;
+
+
+const cors = require("cors");
+app.use(cors());
+
 
 /////////////////////////////////////////
 // 🟢 1. GET MENU
@@ -227,6 +233,11 @@ app.get("/dashboard", async (req, res) => {
 
 /////////////////////////////////////////
 
-app.listen(3000, () => {
-  console.log("Server running on https://backend-mahalarb.onrender.com");
+// app.listen(3000, () => {
+//   console.log("Server running on https://backend-mahalarb.onrender.com");
+// });
+
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
