@@ -68,7 +68,8 @@
     /* form */
     .input-field {
       width: 100%;
-      padding: 12px; /* 🔥 เพิ่มให้ใหญ่ขึ้นตามที่คุณต้องการ */
+      padding: 12px;
+      /* 🔥 เพิ่มให้ใหญ่ขึ้นตามที่คุณต้องการ */
       margin-bottom: 12px;
       border: 1px solid #ccc;
       border-radius: 8px;
@@ -99,7 +100,7 @@
   <!-- FORM POPUP -->
   <div id="formPopup"
     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
-    
+
     <div style="background:white; padding:20px; width:350px; margin:100px auto; border-radius:10px;">
       <h3>เพิ่มเมนู</h3>
 
@@ -120,7 +121,11 @@
   <script>
     const API_URL = "https://backend-mahalarb.onrender.com";
 
+    // const API_URL = "http://localhost:3000";  
+
     let allData = [];
+    let editMode = false;
+    let editId = null;
 
     async function fetchMenu() {
       const res = await fetch(`${API_URL}/menu`);
@@ -171,10 +176,21 @@
         card.className = "card";
 
         card.innerHTML = `
-          <h3>${item.name}</h3>
-          <p class="price">฿ ${item.price}</p>
-          <small>📦 ${item.category_name}</small>
-        `;
+      <h3>${item.name}</h3>
+      <p class="price">฿ ${item.price}</p>
+      <small>📦 ${item.category_name}</small>
+      <br><br>
+
+      <button class="btn"
+        onclick='editMenu(${item.id}, ${JSON.stringify(item.name)}, ${item.price}, ${JSON.stringify(item.category_name)})'>
+        ✏️ แก้ไข
+      </button>
+
+      <button class="btn" style="background:red;color:white;"
+        onclick="deleteMenu(${item.id})">
+        🗑 ลบ
+      </button>
+    `;
 
         menu.appendChild(card);
       });
@@ -216,6 +232,17 @@
       }, 2000);
     }
 
+    function editMenu(id, name, price, category_name) {
+      openForm();
+
+      document.getElementById("name").value = name;
+      document.getElementById("price").value = price;
+      document.getElementById("category").value = category_name;
+
+      editMode = true;
+      editId = id;
+    }
+
     async function addMenu() {
       const name = document.getElementById("name").value.trim();
       const price = document.getElementById("price").value;
@@ -227,21 +254,47 @@
       }
 
       try {
-        const res = await fetch(`${API_URL}/menu`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            name,
-            price,
-            category_name
-          })
-        });
+        let res;
 
-        if (!res.ok) throw new Error();
+        if (editMode) {
+          // ✏️ UPDATE
+          res = await fetch(`${API_URL}/menu/${editId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              name,
+              price,
+              category_name
+            })
+          });
+        } else {
+          // ➕ CREATE
+          res = await fetch(`${API_URL}/menu`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              name,
+              price,
+              category_name
+            })
+          });
+        }
 
-        showToast("เพิ่มเมนูสำเร็จ 🎉");
+        if (!res.ok) {
+          const err = await res.text();
+          console.log("ERROR:", err);
+          throw new Error();
+        }
+
+        showToast(editMode ? "แก้ไขสำเร็จ ✏️" : "เพิ่มเมนูสำเร็จ 🎉");
+
+        // reset
+        editMode = false;
+        editId = null;
 
         document.getElementById("name").value = "";
         document.getElementById("price").value = "";
@@ -251,7 +304,30 @@
         fetchMenu();
 
       } catch (err) {
-        showToast("เพิ่มไม่สำเร็จ ❌", true);
+        showToast("เกิดข้อผิดพลาด ❌", true);
+      }
+    }
+
+    async function deleteMenu(id) {
+      if (!confirm("ต้องการลบเมนูนี้ใช่ไหม?")) return;
+
+      try {
+        const res = await fetch(`${API_URL}/menu/${id}`, {
+          method: "DELETE"
+        });
+
+        if (!res.ok) {
+          const err = await res.text();
+          console.log("ERROR:", err);
+          throw new Error();
+        }
+
+        showToast("ลบสำเร็จ 🗑");
+
+        fetchMenu();
+
+      } catch (err) {
+        showToast("ลบไม่สำเร็จ ❌", true);
       }
     }
 
@@ -264,4 +340,5 @@
   </script>
 
 </body>
+
 </html>
