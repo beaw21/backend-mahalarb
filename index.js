@@ -75,6 +75,42 @@ app.post("/menu", async (req, res) => {
 });
 
 /////////////////////////////////////////
+// ✏️ UPDATE MENU
+//////////////////////////////////////////
+
+app.put('/menu/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, price, category_name } = req.body;
+
+  // หา category_id จากชื่อ
+  const { data: category } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('name', category_name)
+    .single();
+
+  if (!category) {
+    return res.status(400).json({ error: "Category not found" });
+  }
+
+  const { error } = await supabase
+    .from('menu')
+    .update({
+      name,
+      price,
+      category_id: category.id
+    })
+    .eq('id', id);
+
+  if (error) {
+    console.log(error);
+    return res.status(500).json(error);
+  }
+
+  res.json({ message: "updated" });
+});
+
+/////////////////////////////////////////
 // 🟢 DELETE MENU
 /////////////////////////////////////////
 app.delete("/menu/:id", async (req, res) => {
