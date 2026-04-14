@@ -232,6 +232,7 @@
         }
 
         // ================= GROUP ORDER =================
+
         function groupOrders(data) {
             const map = {};
 
@@ -255,6 +256,36 @@
 
             return Object.values(map);
         }
+
+        async function loadOrders() {
+            const res = await fetch(`${API_URL}/orders`);
+            const data = await res.json();
+
+            const orders = groupOrders(data);
+            renderOrders(orders);
+        }
+
+        function renderOrders(orders) {
+            let html = "";
+
+            orders.forEach(o => {
+                const itemsHTML = o.items.map(i =>
+                    `${i.name} x ${i.qty}`
+                ).join("<br>");
+
+                html += `
+        <div style="border:1px solid #ccc; padding:10px; margin:10px;">
+            🧾 Order #${o.order_number}<br>
+            ${itemsHTML}<br>
+            รวม ${o.total}฿<br>
+            ${o.status === "pending" ? "⏳ รอจ่าย" : "💰 จ่ายแล้ว"}
+        </div>
+        `;
+            });
+
+            document.getElementById("orders").innerHTML = html;
+        }
+
 
         // ================= LOAD ORDERS =================
         async function loadOrders() {
