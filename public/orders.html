@@ -22,9 +22,10 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            background: #ddd;
         }
 
-        .active {
+        .cat-btn.active {
             background: orange;
             color: white;
         }
@@ -37,6 +38,7 @@
             border-radius: 8px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
 
         button {
@@ -54,11 +56,20 @@
         .pay {
             background: blue;
             color: white;
+            margin: 2px;
         }
 
         .total {
             font-size: 20px;
             text-align: right;
+            margin: 10px 0;
+        }
+
+        #confirmBtn {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
         }
     </style>
 </head>
@@ -66,16 +77,14 @@
 <body>
 
     <h1>🧾 ระบบออเดอร์</h1>
-    <button class="btn" onclick="goToPage('index.html')">
-        🏠 กลับหน้าหลัก
-    </button>
+    <button onclick="goToPage('index.html')">🏠 กลับหน้าหลัก</button>
+
     <div id="summary" style="margin:20px 0; background:white; padding:15px; border-radius:10px;">
         <b>📊 สรุปออเดอร์วันนี้</b><br>
         🧾 ทั้งหมด: <span id="totalOrders">0</span> ออเดอร์ |
         ⏳ รอชำระ: <span id="pendingOrders">0</span> |
         💰 จ่ายแล้ว: <span id="paidOrders">0</span>
     </div>
-
 
     <div id="categories"></div>
     <div id="menu"></div>
@@ -85,8 +94,7 @@
     <h2>🛒 รายการที่เลือก</h2>
     <div id="cart"></div>
     <div class="total">รวม: <span id="total">0</span> บาท</div>
-
-    <button onclick="confirmOrder()">✅ ยืนยันออเดอร์</button>
+    <button id="confirmBtn" onclick="confirmOrder()">✅ ยืนยันออเดอร์</button>
 
     <hr>
 
@@ -100,16 +108,13 @@
 
         const API_URL = "https://backend-mahalarb.onrender.com";
 
-        const categoryMap = {
-            1: "ข้าว",
-            2: "ก๋วยเตี๋ยว",
-            3: "เครื่องดื่ม"
-        };
-
         // ================= MENU =================
         async function loadMenu() {
             const res = await fetch(`${API_URL}/menu`);
             menuData = await res.json();
+
+            // FIX: Sort menu by price ascending
+            menuData.sort((a, b) => a.price - b.price);
 
             renderCategories();
             renderMenu();
@@ -117,16 +122,20 @@
 
         // ================= CATEGORY =================
         function renderCategories() {
-            const cats = [...new Set(menuData.map(m => m.category_id))];
+            // FIX: Use category_name from API instead of hardcoded categoryMap
+            const seen = new Map();
+            menuData.forEach(m => {
+                if (!seen.has(m.category_id)) {
+                    seen.set(m.category_id, m.category_name || "อื่นๆ");
+                }
+            });
 
             let html = `<button class="cat-btn ${!currentCategory ? 'active' : ''}"
-    onclick="selectCategory(null)">ทั้งหมด</button>`;
+                onclick="selectCategory(null)">ทั้งหมด</button>`;
 
-            cats.forEach(c => {
-                html += `<button class="cat-btn ${currentCategory === c ? 'active' : ''}"
-        onclick="selectCategory(${c})">
-        ${categoryMap[c] || 'อื่นๆ'}
-        </button>`;
+            seen.forEach((name, id) => {
+                html += `<button class="cat-btn ${currentCategory === id ? 'active' : ''}"
+                    onclick="selectCategory(${id})">${name}</button>`;
             });
 
             document.getElementById("categories").innerHTML = html;
@@ -145,17 +154,15 @@
                 : menuData;
 
             let html = "";
-
             data.forEach(m => {
                 html += `
-        <div class="menu-item">
-            <span>${m.name} (${m.price}฿)</span>
-            <button class="add" onclick="addToCart(${m.id})">เพิ่ม</button>
-        </div>
-        `;
+                <div class="menu-item">
+                    <span>${m.name} (${m.price}฿)</span>
+                    <button class="add" onclick="addToCart(${m.id})">+ เพิ่ม</button>
+                </div>`;
             });
 
-            document.getElementById("menu").innerHTML = html;
+            document.getElementById("menu").innerHTML = html || "<p>ไม่มีเมนู</p>";
         }
 
         // ================= CART =================
@@ -171,6 +178,7 @@
 
         function changeQty(id, delta) {
             const item = cart.find(c => c.id === id);
+            if (!item) return;
             item.qty += delta;
 
             if (item.qty <= 0) {
@@ -186,22 +194,20 @@
 
             cart.forEach(c => {
                 total += c.price * c.qty;
-
                 html += `
-        <div class="order-item">
-            <div>
-                ${c.name}<br>
-                <button onclick="changeQty(${c.id},-1)">-</button>
-                ${c.qty}
-                <button onclick="changeQty(${c.id},1)">+</button>
-            </div>
-            <div>${c.price * c.qty}฿</div>
-        </div>
-        `;
+                <div class="order-item">
+                    <div>
+                        <b>${c.name}</b><br>
+                        <button onclick="changeQty(${c.id}, -1)">−</button>
+                        &nbsp;${c.qty}&nbsp;
+                        <button onclick="changeQty(${c.id}, 1)">+</button>
+                    </div>
+                    <div>${(c.price * c.qty).toFixed(2)}฿</div>
+                </div>`;
             });
 
-            document.getElementById("cart").innerHTML = html;
-            document.getElementById("total").innerText = total;
+            document.getElementById("cart").innerHTML = html || "<p style='color:#999'>ยังไม่มีรายการ</p>";
+            document.getElementById("total").innerText = total.toFixed(2);
         }
 
         // ================= CREATE ORDER =================
@@ -222,16 +228,18 @@
 
             const data = await res.json();
 
-            if (!res.ok) return alert("สร้างออเดอร์ไม่สำเร็จ");
+            if (!res.ok) return alert("สร้างออเดอร์ไม่สำเร็จ: " + (data.error || ""));
 
-            alert("สร้างออเดอร์ #" + data.order_id);
+            // FIX: Show order_number (daily number) not internal DB id
+            alert("✅ สร้างออเดอร์ #" + (data.order_number ?? data.order_id));
 
             cart = [];
             renderCart();
             loadOrders();
         }
 
-        // ================= GROUP ORDER =================
+        // ================= GROUP ORDERS =================
+        // FIX: Also capture order_number in the grouped map
         function groupOrders(data) {
             const map = {};
 
@@ -239,6 +247,7 @@
                 if (!map[item.order_id]) {
                     map[item.order_id] = {
                         id: item.order_id,
+                        order_number: item.order_number,   // FIX: was missing
                         items: [],
                         total: 0,
                         status: item.payment_status || "pending"
@@ -257,6 +266,7 @@
         }
 
         // ================= LOAD ORDERS =================
+        // FIX: Only one definition of loadOrders (duplicate removed)
         async function loadOrders() {
             const res = await fetch(`${API_URL}/orders`);
             const data = await res.json();
@@ -268,39 +278,36 @@
         }
 
         // ================= RENDER ORDERS =================
+        // FIX: Only one definition of renderOrders (duplicate removed)
+        // FIX: Use order_number for display, consistent "success" status check
         function renderOrders(orders) {
             let html = "";
 
             orders.forEach(o => {
-                const statusText = o.status === "success" ? "💰 จ่ายแล้ว" : "⏳ รอชำระ";
-                const statusColor = o.status === "success" ? "green" : "orange";
+                const isPaid = o.status === "success";
+                const statusText = isPaid ? "💰 จ่ายแล้ว" : "⏳ รอชำระ";
+                const statusColor = isPaid ? "green" : "orange";
 
-                const itemsHTML = o.items.map(i =>
-                    `${i.name} x ${i.qty}`
-                ).join("<br>");
+                const itemsHTML = o.items.map(i => `${i.name} x ${i.qty}`).join("<br>");
 
                 html += `
-        <div class="order-item">
-            <div>
-                🧾 Order #${o.id}<br>
-                ${itemsHTML}<br>
-                รวม ${o.total}฿<br>
-                <span style="color:${statusColor}">
-                    <b>${statusText}</b>
-                </span>
-            </div>
-
-            <div>
-                ${o.status !== "success" ? `
-                    <button class="pay" onclick="pay(${o.id},'cash')">เงินสด</button>
-                    <button class="pay" onclick="pay(${o.id},'qr')">สแกน</button>
-                ` : "✅ เสร็จ"}
-            </div>
-        </div>
-        `;
+                <div class="order-item">
+                    <div>
+                        🧾 Order #${o.order_number}<br>
+                        ${itemsHTML}<br>
+                        รวม ${o.total.toFixed(2)}฿<br>
+                        <span style="color:${statusColor}"><b>${statusText}</b></span>
+                    </div>
+                    <div>
+                        ${!isPaid ? `
+                            <button class="pay" onclick="pay(${o.id}, 'cash')">💵 เงินสด</button>
+                            <button class="pay" onclick="pay(${o.id}, 'qr')">📱 สแกน QR</button>
+                        ` : "✅ เสร็จสิ้น"}
+                    </div>
+                </div>`;
             });
 
-            document.getElementById("orders").innerHTML = html;
+            document.getElementById("orders").innerHTML = html || "<p style='color:#999'>ยังไม่มีออเดอร์วันนี้</p>";
         }
 
         // ================= SUMMARY =================
@@ -319,15 +326,12 @@
             const res = await fetch(`${API_URL}/pay`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    order_id: orderId,
-                    method: method
-                })
+                body: JSON.stringify({ order_id: orderId, method })
             });
 
             if (!res.ok) return alert("จ่ายเงินไม่สำเร็จ");
 
-            alert("ชำระเงินสำเร็จ");
+            alert("✅ ชำระเงินสำเร็จ");
             loadOrders();
         }
 
@@ -338,9 +342,7 @@
         // ================= INIT =================
         loadMenu();
         loadOrders();
-
     </script>
 
 </body>
-
 </html>
