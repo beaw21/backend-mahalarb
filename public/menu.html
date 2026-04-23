@@ -75,6 +75,35 @@
       border-radius: 8px;
       font-size: 16px;
     }
+
+    .input-field {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+
+      box-sizing: border-box;
+      /* 🔥 ตัวแก้ปัญหาหลัก */
+    }
+
+    #formPopup>div {
+      background: white;
+      padding: 25px;
+      width: 350px;
+      margin: 100px auto;
+      border-radius: 12px;
+    }
+
+    .popup-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .popup-actions .btn {
+      flex: 1;
+    }
   </style>
 </head>
 
@@ -113,6 +142,7 @@
 
       <button onclick="addMenu()" class="btn" style="background:orange;color:white;">บันทึก</button>
       <button onclick="closeForm()" class="btn">ยกเลิก</button>
+      
     </div>
   </div>
 

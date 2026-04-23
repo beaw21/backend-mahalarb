@@ -113,9 +113,6 @@
             const res = await fetch(`${API_URL}/menu`);
             menuData = await res.json();
 
-            // FIX: Sort menu by price ascending
-            menuData.sort((a, b) => a.price - b.price);
-
             renderCategories();
             renderMenu();
         }
