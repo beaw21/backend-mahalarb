@@ -58,7 +58,7 @@ app.get("/menu", async (req, res) => {
       category_id,
       categories(name)
     `)
-    .order("price", { ascending: true }); // FIX: sort by price ascending
+    .order("price", { ascending: false }); // FIX: sort by price ascending
 
   if (error) return res.status(500).json(error);
 
