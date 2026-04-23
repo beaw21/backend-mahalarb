@@ -162,6 +162,8 @@ app.post("/order", async (req, res) => {
     const { todayTH } = getTodayRangeUTC();
     const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
+    // ✅ Single atomic Postgres call: lock + count + insert in one transaction
+    // Node sends todayTH (Thailand date) directly — no timezone math in Postgres
     const { data: order, error: orderError } = await supabase.rpc(
       "create_order_atomic",
       {
@@ -301,6 +303,35 @@ app.post("/pay", async (req, res) => {
 });
 
 /////////////////////////////////////////
+// 🔍 DEBUG — ลบออกหลัง deploy จริง
+// เปิด https://backend-mahalarb.onrender.com/debug ดูว่า Supabase ตอบอะไร
+/////////////////////////////////////////
+app.get("/debug", async (req, res) => {
+  const results = {};
+
+  // Test 1: menu + categories join
+  const { data: menu, error: menuErr } = await supabase
+    .from("menu")
+    .select("id, name, price, category_id, categories(name)")
+    .limit(3);
+  results.menu = menuErr ? { error: menuErr } : menu;
+
+  // Test 2: orders table + order_date column exists
+  const { data: orders, error: ordersErr } = await supabase
+    .from("orders")
+    .select("id, order_number, order_date, payment_status")
+    .limit(3);
+  results.orders = ordersErr ? { error: ordersErr } : orders;
+
+  // Test 3: today TH date
+  const TZ = 7 * 60 * 60 * 1000;
+  const nowTH = new Date(Date.now() + TZ);
+  results.todayTH = `${nowTH.getUTCFullYear()}-${String(nowTH.getUTCMonth()+1).padStart(2,'0')}-${String(nowTH.getUTCDate()).padStart(2,'0')}`;
+
+  res.json(results);
+});
+
+/////////////////////////////////////////
 // 🟢 DASHBOARD
 /////////////////////////////////////////
 app.get("/dashboard", async (req, res) => {
@@ -317,4 +348,181 @@ app.get("/dashboard", async (req, res) => {
 /////////////////////////////////////////
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+/////////////////////////////////////////
+// 🟢 DASHBOARD — SUMMARY (day/week/month)
+// GET /dashboard/summary?period=day|week|month
+/////////////////////////////////////////
+app.get("/dashboard/summary", async (req, res) => {
+  try {
+    const period = req.query.period || "day"; // day | week | month
+    const TZ = 7 * 60 * 60 * 1000;
+    const nowTH = new Date(Date.now() + TZ);
+    const y = nowTH.getUTCFullYear();
+    const mo = nowTH.getUTCMonth();
+    const d = nowTH.getUTCDate();
+
+    let startDate, endDate, groupBy;
+
+    if (period === "day") {
+      // วันนี้ แสดงรายชั่วโมง
+      startDate = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      endDate   = startDate;
+      groupBy   = "hour";
+    } else if (period === "week") {
+      // 7 วันย้อนหลัง แสดงรายวัน
+      const start = new Date(Date.UTC(y, mo, d) - TZ - 6 * 86400000);
+      const startTH = new Date(start.getTime() + TZ);
+      startDate = `${startTH.getUTCFullYear()}-${String(startTH.getUTCMonth()+1).padStart(2,'0')}-${String(startTH.getUTCDate()).padStart(2,'0')}`;
+      endDate   = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      groupBy   = "day";
+    } else {
+      // เดือนนี้ แสดงรายวัน
+      startDate = `${y}-${String(mo+1).padStart(2,'0')}-01`;
+      endDate   = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      groupBy   = "day";
+    }
+
+    const { data: orders, error } = await supabase
+      .from("orders")
+      .select("id, order_number, total_price, order_date, created_at, payment_status, payment_method")
+      .eq("payment_status", "success")
+      .gte("order_date", startDate)
+      .lte("order_date", endDate)
+      .order("order_date", { ascending: true });
+
+    if (error) throw error;
+
+    // รวมยอดขาย
+    const totalRevenue = orders.reduce((s, o) => s + parseFloat(o.total_price), 0);
+    const totalOrders  = orders.length;
+
+    // แยกยอดตาม payment_method
+    const cashRevenue = orders
+      .filter(o => o.payment_method === "cash")
+      .reduce((s, o) => s + parseFloat(o.total_price), 0);
+    const qrRevenue = orders
+      .filter(o => o.payment_method === "qr")
+      .reduce((s, o) => s + parseFloat(o.total_price), 0);
+    const cashOrders = orders.filter(o => o.payment_method === "cash").length;
+    const qrOrders   = orders.filter(o => o.payment_method === "qr").length;
+
+    // Group ตาม day หรือ hour — แยก cash/qr ด้วย
+    const grouped = {};
+    orders.forEach(o => {
+      let key;
+      if (groupBy === "hour") {
+        const thTime = new Date(new Date(o.created_at).getTime() + TZ);
+        key = String(thTime.getUTCHours()).padStart(2,'0') + ":00";
+      } else {
+        key = o.order_date;
+      }
+      if (!grouped[key]) grouped[key] = { label: key, revenue: 0, cash: 0, qr: 0, orders: 0 };
+      grouped[key].revenue += parseFloat(o.total_price);
+      grouped[key].orders  += 1;
+      if (o.payment_method === "cash") grouped[key].cash += parseFloat(o.total_price);
+      if (o.payment_method === "qr")   grouped[key].qr   += parseFloat(o.total_price);
+    });
+
+    res.json({
+      period,
+      startDate,
+      endDate,
+      totalRevenue,
+      totalOrders,
+      avgOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
+      cashRevenue,
+      qrRevenue,
+      cashOrders,
+      qrOrders,
+      chart: Object.values(grouped)
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/////////////////////////////////////////
+// 🟢 DASHBOARD — MENU BREAKDOWN (day/week/month)
+// GET /dashboard/menu?period=day|week|month
+/////////////////////////////////////////
+app.get("/dashboard/menu", async (req, res) => {
+  try {
+    const period = req.query.period || "day";
+    const TZ = 7 * 60 * 60 * 1000;
+    const nowTH = new Date(Date.now() + TZ);
+    const y = nowTH.getUTCFullYear();
+    const mo = nowTH.getUTCMonth();
+    const d = nowTH.getUTCDate();
+
+    let startDate, endDate;
+
+    if (period === "day") {
+      startDate = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      endDate   = startDate;
+    } else if (period === "week") {
+      const start = new Date(Date.UTC(y, mo, d) - TZ - 6 * 86400000);
+      const startTH = new Date(start.getTime() + TZ);
+      startDate = `${startTH.getUTCFullYear()}-${String(startTH.getUTCMonth()+1).padStart(2,'0')}-${String(startTH.getUTCDate()).padStart(2,'0')}`;
+      endDate   = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    } else {
+      startDate = `${y}-${String(mo+1).padStart(2,'0')}-01`;
+      endDate   = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    }
+
+    // หา order_id ที่ paid ในช่วงนี้ก่อน
+    const { data: paidOrders, error: ordErr } = await supabase
+      .from("orders")
+      .select("id")
+      .eq("payment_status", "success")
+      .gte("order_date", startDate)
+      .lte("order_date", endDate);
+
+    if (ordErr) throw ordErr;
+    if (!paidOrders || paidOrders.length === 0) return res.json({ period, startDate, endDate, items: [] });
+
+    const orderIds = paidOrders.map(o => o.id);
+
+    // ดึง order_items พร้อม menu name และ category
+    const { data: items, error: itemErr } = await supabase
+      .from("order_items")
+      .select(`
+        quantity,
+        unit_price,
+        menu:menu_id(id, name, category_id, categories(name))
+      `)
+      .in("order_id", orderIds);
+
+    if (itemErr) throw itemErr;
+
+    // Group by menu
+    const menuMap = {};
+    items.forEach(i => {
+      const menuId = i.menu?.id;
+      if (!menuId) return;
+      if (!menuMap[menuId]) {
+        menuMap[menuId] = {
+          menu_id:       menuId,
+          name:          i.menu.name,
+          category:      i.menu.categories?.name || "อื่นๆ",
+          qty:           0,
+          revenue:       0
+        };
+      }
+      menuMap[menuId].qty     += i.quantity;
+      menuMap[menuId].revenue += i.quantity * parseFloat(i.unit_price);
+    });
+
+    // เรียงจากขายดีสุด
+    const result = Object.values(menuMap).sort((a, b) => b.qty - a.qty);
+
+    res.json({ period, startDate, endDate, items: result });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
