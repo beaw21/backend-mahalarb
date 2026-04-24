@@ -3,521 +3,320 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard — ร้านมหาลาภ</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<title>Dashboard · มหาลาภ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:       #0f1117;
-    --surface:  #181c27;
-    --surface2: #1f2435;
-    --border:   #2a3045;
-    --accent:   #f59e0b;
-    --green:    #10b981;
-    --indigo:   #6366f1;
-    --cash:     #34d399;
-    --qr:       #818cf8;
-    --danger:   #f43f5e;
-    --text:     #e8eaf0;
-    --muted:    #7a859e;
-    --font:     'Sarabun', sans-serif;
-    --mono:     'IBM Plex Mono', monospace;
+    --bg:      #f7f3ee;
+    --surface: #ffffff;
+    --s2:      #fdf9f5;
+    --border:  #e8dfd5;
+    --accent:  #c2673a;
+    --accent2: #e8906a;
+    --green:   #3a8a5c;
+    --blue:    #3a6fa8;
+    --cash:    #3a8a5c;
+    --qr:      #3a6fa8;
+    --text:    #2c2118;
+    --muted:   #8c7b6e;
+    --font:    'Noto Serif Thai', serif;
+    --mono:    'DM Mono', monospace;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+    background-size: 28px 28px; opacity:.4; pointer-events:none; z-index:0;
+  }
 
   /* TOPBAR */
   .topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 32px;
-    background: var(--surface); border-bottom: 1px solid var(--border);
-    position: sticky; top: 0; z-index: 100;
+    position:sticky; top:0; z-index:100;
+    background:rgba(247,243,238,.92); backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 32px; height:64px;
   }
-  .topbar-left { display: flex; align-items: center; gap: 16px; }
-  .logo { font-size: 22px; font-weight: 700; letter-spacing: -.5px; }
-  .logo span { color: var(--accent); }
+  .topbar-left { display:flex; align-items:center; gap:14px; }
   .back-btn {
-    background: var(--surface2); border: 1px solid var(--border);
-    color: var(--muted); padding: 7px 16px; border-radius: 8px;
-    cursor: pointer; font-family: var(--font); font-size: 13px; transition: all .2s;
+    background:var(--surface); border:1.5px solid var(--border); color:var(--muted);
+    padding:7px 16px; border-radius:10px; cursor:pointer;
+    font-family:var(--font); font-size:13px; font-weight:600; transition:all .2s;
   }
-  .back-btn:hover { color: var(--text); border-color: var(--accent); }
+  .back-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .page-title { font-size:17px; font-weight:700; }
+  .page-title em { color:var(--accent); font-style:normal; }
 
   /* PERIOD TABS */
-  .period-tabs {
-    display: flex; gap: 6px;
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 10px; padding: 4px;
-  }
-  .tab {
-    padding: 7px 20px; border-radius: 7px; border: none;
-    background: transparent; color: var(--muted);
-    cursor: pointer; font-family: var(--font); font-size: 14px; font-weight: 600; transition: all .2s;
-  }
-  .tab.active { background: var(--accent); color: #000; }
-  .tab:not(.active):hover { color: var(--text); }
+  .period-tabs { display:flex; gap:4px; background:var(--s2); border:1.5px solid var(--border); border-radius:12px; padding:4px; }
+  .tab { padding:7px 18px; border-radius:8px; border:none; background:transparent; color:var(--muted); cursor:pointer; font-family:var(--font); font-size:13px; font-weight:700; transition:all .2s; }
+  .tab.active { background:var(--accent); color:#fff; box-shadow:0 2px 8px rgba(194,103,58,.3); }
+  .tab:not(.active):hover { color:var(--accent); }
 
   /* MAIN */
-  .main { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
-  .period-label { font-size: 12px; color: var(--muted); margin-bottom: 22px; font-family: var(--mono); }
-  .period-label span { color: var(--accent); }
+  .main { position:relative; z-index:1; padding:28px 32px; max-width:1400px; margin:0 auto; }
+  .period-label { font-size:12px; color:var(--muted); font-family:var(--mono); margin-bottom:24px; }
+  .period-label em { color:var(--accent); font-style:normal; }
 
-  /* SECTION HEADER */
-  .section-title {
-    font-size: 11px; font-family: var(--mono); color: var(--muted);
-    text-transform: uppercase; letter-spacing: 1.2px;
-    margin-bottom: 14px; padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  /* KPI GRID — row 1: total + avg */
-  .kpi-grid-top {
-    display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; margin-bottom: 14px;
-  }
-  /* KPI GRID — row 2: cash + qr */
-  .kpi-grid-pay {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 28px;
-  }
+  /* KPI ROW 1 */
+  .kpi-top { display:grid; grid-template-columns:2fr 1fr 1fr; gap:16px; margin-bottom:16px; }
 
   .kpi-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 20px 22px;
-    position: relative; overflow: hidden; transition: border-color .2s;
+    background:var(--surface); border:1.5px solid var(--border);
+    border-radius:20px; padding:22px 24px;
+    position:relative; overflow:hidden; transition:all .2s;
   }
-  .kpi-card:hover { border-color: var(--accent); }
-  .kpi-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  }
-  /* top row accents */
-  .kpi-card.c-total::before  { background: var(--accent); }
-  .kpi-card.c-orders::before { background: var(--green); }
-  .kpi-card.c-avg::before    { background: var(--indigo); }
-  /* payment accents */
-  .kpi-card.c-cash::before { background: var(--cash); }
-  .kpi-card.c-qr::before   { background: var(--qr); }
+  .kpi-card:hover { box-shadow:0 8px 28px rgba(44,33,24,.08); transform:translateY(-1px); }
+  .kpi-card::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .kpi-card.c-rev::after   { background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+  .kpi-card.c-ord::after   { background:linear-gradient(90deg,var(--green),#5db88a); }
+  .kpi-card.c-avg::after   { background:linear-gradient(90deg,var(--blue),#6b9fd4); }
+  .kpi-card.c-cash::after  { background:linear-gradient(90deg,var(--cash),#5db88a); }
+  .kpi-card.c-qr::after    { background:linear-gradient(90deg,var(--qr),#6b9fd4); }
 
-  .kpi-label {
-    font-size: 11px; color: var(--muted); text-transform: uppercase;
-    letter-spacing: 1px; margin-bottom: 8px; font-family: var(--mono);
-  }
-  .kpi-icon { font-size: 16px; margin-right: 6px; }
-  .kpi-value {
-    font-size: 32px; font-weight: 700; font-family: var(--mono);
-    line-height: 1; margin-bottom: 5px;
-  }
-  .kpi-card.c-total  .kpi-value { color: var(--accent); }
-  .kpi-card.c-orders .kpi-value { color: var(--green); }
-  .kpi-card.c-avg    .kpi-value { color: var(--indigo); }
-  .kpi-card.c-cash   .kpi-value { color: var(--cash); font-size: 26px; }
-  .kpi-card.c-qr     .kpi-value { color: var(--qr);   font-size: 26px; }
-  .kpi-sub { font-size: 12px; color: var(--muted); }
+  .kpi-label { font-size:11px; font-family:var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+  .kpi-value { font-size:32px; font-weight:800; font-family:var(--mono); line-height:1; margin-bottom:6px; }
+  .kpi-card.c-rev  .kpi-value { color:var(--accent); }
+  .kpi-card.c-ord  .kpi-value { color:var(--green); }
+  .kpi-card.c-avg  .kpi-value { color:var(--blue); }
+  .kpi-card.c-cash .kpi-value { color:var(--cash); font-size:24px; }
+  .kpi-card.c-qr   .kpi-value { color:var(--qr);  font-size:24px; }
+  .kpi-sub { font-size:12px; color:var(--muted); }
 
-  /* payment split bar inside total card */
-  .pay-split { margin-top: 14px; }
-  .pay-split-bar {
-    height: 6px; border-radius: 99px; background: var(--border);
-    overflow: hidden; margin-bottom: 6px;
-    display: flex;
-  }
-  .pay-split-cash { height: 100%; background: var(--cash); transition: width .6s; }
-  .pay-split-qr   { height: 100%; background: var(--qr);   transition: width .6s; }
-  .pay-split-labels {
-    display: flex; justify-content: space-between;
-    font-size: 11px; font-family: var(--mono); color: var(--muted);
-  }
-  .pay-split-labels .cash-lbl { color: var(--cash); }
-  .pay-split-labels .qr-lbl   { color: var(--qr); }
+  /* payment split bar */
+  .split-bar { margin-top:14px; }
+  .split-track { height:6px; border-radius:99px; background:var(--border); display:flex; overflow:hidden; margin-bottom:6px; }
+  .split-cash { height:100%; background:var(--cash); transition:width .6s cubic-bezier(.16,1,.3,1); }
+  .split-qr   { height:100%; background:var(--qr);   transition:width .6s cubic-bezier(.16,1,.3,1); }
+  .split-labels { display:flex; justify-content:space-between; font-size:11px; font-family:var(--mono); }
+  .split-labels .lc { color:var(--cash); }
+  .split-labels .lq { color:var(--qr); }
 
-  /* BOTTOM GRID */
-  .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  /* KPI ROW 2 */
+  .kpi-bot { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:28px; }
 
   /* PANEL */
-  .panel {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; overflow: hidden;
-  }
-  .panel-header {
-    padding: 16px 20px 14px; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .panel-title { font-size: 14px; font-weight: 700; }
-  .panel-badge {
-    font-size: 11px; font-family: var(--mono);
-    background: var(--surface2); border: 1px solid var(--border);
-    padding: 3px 10px; border-radius: 20px; color: var(--muted);
-  }
-  .panel-body { padding: 20px; }
+  .panels { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .panel { background:var(--surface); border:1.5px solid var(--border); border-radius:20px; overflow:hidden; }
+  .panel-head { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .panel-title { font-size:14px; font-weight:700; }
+  .panel-badge { font-size:11px; font-family:var(--mono); background:var(--s2); border:1.5px solid var(--border); padding:3px 10px; border-radius:99px; color:var(--muted); }
+  .panel-body { padding:20px; }
 
-  /* BAR CHART */
-  .chart-legend {
-    display: flex; gap: 16px; margin-bottom: 14px;
-    font-size: 11px; font-family: var(--mono); color: var(--muted);
+  /* CHART */
+  .legend { display:flex; gap:16px; margin-bottom:14px; font-size:11px; font-family:var(--mono); color:var(--muted); }
+  .ld { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle; }
+  .chart-bars { display:flex; align-items:flex-end; gap:5px; height:150px; margin-bottom:8px; }
+  .bar-col { flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end; }
+  .bar-stack { width:100%; display:flex; flex-direction:column; justify-content:flex-end; position:relative; cursor:pointer; border-radius:4px 4px 0 0; overflow:visible; }
+  .bar-stack:hover .btip { display:block; }
+  .b-qr  { width:100%; background:var(--qr);  border-radius:4px 4px 0 0; min-height:2px; transition:height .6s cubic-bezier(.16,1,.3,1); }
+  .b-cash{ width:100%; background:var(--cash); min-height:0; transition:height .6s cubic-bezier(.16,1,.3,1); }
+  .btip {
+    display:none; position:absolute; bottom:calc(100%+6px); left:50%; transform:translateX(-50%);
+    background:var(--text); color:#fff; border-radius:8px; padding:8px 12px;
+    font-size:11px; font-family:var(--mono); white-space:nowrap; z-index:10; line-height:1.7;
+    box-shadow:0 4px 16px rgba(44,33,24,.2); pointer-events:none;
   }
-  .legend-dot {
-    display: inline-block; width: 8px; height: 8px;
-    border-radius: 50%; margin-right: 5px; vertical-align: middle;
-  }
-  .chart-bars {
-    display: flex; align-items: flex-end; gap: 4px;
-    height: 150px; margin-bottom: 8px;
-  }
-  .bar-col {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; gap: 0; height: 100%; justify-content: flex-end;
-  }
-  .bar-stack { width: 100%; display: flex; flex-direction: column; justify-content: flex-end; cursor: pointer; position: relative; }
-  .bar-stack:hover .tooltip { display: block; }
-  .bar-cash {
-    width: 100%; background: var(--cash); border-radius: 0;
-    transition: height .6s cubic-bezier(.16,1,.3,1);
-  }
-  .bar-qr {
-    width: 100%; background: var(--qr);
-    border-radius: 4px 4px 0 0;
-    transition: height .6s cubic-bezier(.16,1,.3,1);
-  }
-  .bar-cash:only-child { border-radius: 4px 4px 0 0; }
-  .tooltip {
-    display: none; position: absolute;
-    bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 8px 12px;
-    font-size: 11px; font-family: var(--mono);
-    white-space: nowrap; color: var(--text); z-index: 20;
-    pointer-events: none; line-height: 1.7;
-  }
-  .tooltip .t-cash { color: var(--cash); }
-  .tooltip .t-qr   { color: var(--qr); }
-  .bar-label {
-    font-size: 9px; color: var(--muted); font-family: var(--mono);
-    text-align: center; margin-top: 5px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
-  }
-  .chart-empty {
-    height: 150px; display: flex; align-items: center;
-    justify-content: center; color: var(--muted); font-size: 13px;
-  }
+  .btip .tc { color:#7de8b0; }
+  .btip .tq { color:#90bfe8; }
+  .bar-label { font-size:9px; color:var(--muted); font-family:var(--mono); margin-top:5px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+  .chart-empty { height:150px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:13px; }
 
   /* MENU TABLE */
-  .menu-table { width: 100%; border-collapse: collapse; }
-  .menu-table th {
-    text-align: left; font-size: 10px; font-family: var(--mono);
-    color: var(--muted); text-transform: uppercase; letter-spacing: .8px;
-    padding: 0 0 10px; border-bottom: 1px solid var(--border);
-  }
-  .menu-table th:last-child, .menu-table td:last-child { text-align: right; }
-  .menu-table td {
-    padding: 10px 0; font-size: 13px;
-    border-bottom: 1px solid var(--border); vertical-align: middle;
-  }
-  .menu-table tr:last-child td { border-bottom: none; }
-  .menu-name { font-weight: 600; }
-  .menu-cat { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .qty-badge {
-    display: inline-block; background: var(--surface2); border: 1px solid var(--border);
-    padding: 2px 10px; border-radius: 20px;
-    font-family: var(--mono); font-size: 12px; color: var(--green); font-weight: 600;
-  }
-  .revenue-val { font-family: var(--mono); font-size: 13px; color: var(--accent); font-weight: 600; }
-  .rank-bar-wrap { display: flex; align-items: center; gap: 8px; }
-  .rank-bar { flex: 1; height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; min-width: 36px; }
-  .rank-bar-fill { height: 100%; background: var(--green); border-radius: 99px; transition: width .6s cubic-bezier(.16,1,.3,1); }
+  .mtable { width:100%; border-collapse:collapse; }
+  .mtable th { text-align:left; font-size:10px; font-family:var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.8px; padding:0 0 10px; border-bottom:1.5px solid var(--border); }
+  .mtable th:last-child, .mtable td:last-child { text-align:right; }
+  .mtable td { padding:10px 0; font-size:13px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  .mtable tr:last-child td { border-bottom:none; }
+  .mn { font-weight:700; }
+  .mc { font-size:11px; color:var(--muted); font-family:var(--mono); }
+  .qty-pill { display:inline-block; background:rgba(58,138,92,.1); border:1.5px solid rgba(58,138,92,.2); padding:3px 10px; border-radius:99px; font-family:var(--mono); font-size:12px; color:var(--green); font-weight:600; }
+  .rev-val { font-family:var(--mono); font-size:13px; color:var(--accent); font-weight:700; }
+  .rank-wrap { display:flex; align-items:center; gap:8px; }
+  .rbar { flex:1; height:4px; background:var(--border); border-radius:99px; overflow:hidden; min-width:32px; }
+  .rbar-fill { height:100%; background:var(--green); border-radius:99px; transition:width .6s cubic-bezier(.16,1,.3,1); }
 
   /* LOADING */
-  .loading {
-    display: flex; align-items: center; justify-content: center;
-    padding: 60px; color: var(--muted); font-size: 14px; gap: 10px;
-  }
-  .spinner {
-    width: 18px; height: 18px; border: 2px solid var(--border);
-    border-top-color: var(--accent); border-radius: 50%;
-    animation: spin .7s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .shimmer { background:linear-gradient(90deg,var(--border) 25%,var(--s2) 50%,var(--border) 75%); background-size:200%; animation:sh 1.2s infinite; border-radius:8px; }
+  @keyframes sh { from{background-position:200%} to{background-position:0} }
+  .loading { display:flex; align-items:center; justify-content:center; padding:50px; color:var(--muted); font-size:13px; gap:10px; }
 
-  /* RESPONSIVE */
-  @media (max-width: 960px) {
-    .kpi-grid-top { grid-template-columns: 1fr 1fr; }
-    .bottom-grid  { grid-template-columns: 1fr; }
-    .main { padding: 20px 16px; }
-    .topbar { padding: 14px 16px; }
-  }
-  @media (max-width: 600px) {
-    .kpi-grid-top { grid-template-columns: 1fr; }
-    .kpi-value { font-size: 26px; }
-    .tab { padding: 6px 14px; font-size: 13px; }
-  }
+  @media(max-width:1000px){ .kpi-top{grid-template-columns:1fr 1fr;} .panels{grid-template-columns:1fr;} }
+  @media(max-width:600px){ .kpi-top,.kpi-bot{grid-template-columns:1fr;} .main{padding:16px;} .topbar{padding:0 16px;} .period-tabs .tab{padding:6px 12px;} }
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <div class="topbar-left">
-    <button class="back-btn" onclick="location.href='index.html'">← หน้าหลัก</button>
-    <div class="logo">มหา<span>ลาภ</span> · Dashboard</div>
+    <button class="back-btn" onclick="go('index.html')">← หน้าหลัก</button>
+    <div class="page-title">📊 ภาพรวม<em>ร้าน</em></div>
   </div>
   <div class="period-tabs">
-    <button class="tab active" data-period="day"   onclick="setPeriod('day')">วันนี้</button>
-    <button class="tab"        data-period="week"  onclick="setPeriod('week')">สัปดาห์</button>
-    <button class="tab"        data-period="month" onclick="setPeriod('month')">เดือนนี้</button>
+    <button class="tab active" data-p="day"   onclick="setPeriod('day')">วันนี้</button>
+    <button class="tab"        data-p="week"  onclick="setPeriod('week')">สัปดาห์</button>
+    <button class="tab"        data-p="month" onclick="setPeriod('month')">เดือนนี้</button>
   </div>
 </div>
 
 <div class="main">
-  <div class="period-label" id="periodLabel">กำลังโหลด...</div>
+  <div class="period-label" id="pLabel">กำลังโหลด...</div>
 
-  <!-- ROW 1: total / orders / avg -->
-  <div class="kpi-grid-top">
-
-    <div class="kpi-card c-total">
-      <div class="kpi-label">💰 ยอดขายรวม (฿)</div>
-      <div class="kpi-value" id="kpiRevenue">—</div>
-      <div class="kpi-sub" id="kpiRevSub"></div>
-      <!-- split bar -->
-      <div class="pay-split">
-        <div class="pay-split-bar">
-          <div class="pay-split-cash" id="splitCash" style="width:0%"></div>
-          <div class="pay-split-qr"   id="splitQr"   style="width:0%"></div>
-        </div>
-        <div class="pay-split-labels">
-          <span class="cash-lbl" id="splitCashLbl">เงินสด ฿0</span>
-          <span class="qr-lbl"   id="splitQrLbl">QR ฿0</span>
-        </div>
+  <!-- KPI top row -->
+  <div class="kpi-top">
+    <div class="kpi-card c-rev">
+      <div class="kpi-label">💰 ยอดขายรวม</div>
+      <div class="kpi-value" id="kRev">—</div>
+      <div class="kpi-sub" id="kRevSub"></div>
+      <div class="split-bar">
+        <div class="split-track"><div class="split-cash" id="sCash" style="width:0"></div><div class="split-qr" id="sQr" style="width:0"></div></div>
+        <div class="split-labels"><span class="lc" id="sLcash">เงินสด ฿0</span><span class="lq" id="sLqr">QR ฿0</span></div>
       </div>
     </div>
-
-    <div class="kpi-card c-orders">
+    <div class="kpi-card c-ord">
       <div class="kpi-label">🧾 ออเดอร์ทั้งหมด</div>
-      <div class="kpi-value" id="kpiOrders">—</div>
-      <div class="kpi-sub" id="kpiOrdSub"></div>
+      <div class="kpi-value" id="kOrd">—</div>
+      <div class="kpi-sub" id="kOrdSub"></div>
     </div>
-
     <div class="kpi-card c-avg">
-      <div class="kpi-label">📊 เฉลี่ย / ออเดอร์</div>
-      <div class="kpi-value" id="kpiAvg">—</div>
+      <div class="kpi-label">📈 เฉลี่ย / ออเดอร์</div>
+      <div class="kpi-value" id="kAvg">—</div>
       <div class="kpi-sub">มูลค่าเฉลี่ย</div>
     </div>
-
   </div>
 
-  <!-- ROW 2: cash / qr breakdown -->
-  <div class="kpi-grid-pay">
-
+  <!-- KPI bot row -->
+  <div class="kpi-bot">
     <div class="kpi-card c-cash">
-      <div class="kpi-label"><span class="kpi-icon">💵</span>เงินสด</div>
-      <div class="kpi-value" id="kpiCash">—</div>
-      <div class="kpi-sub" id="kpiCashSub"></div>
+      <div class="kpi-label">💵 เงินสด</div>
+      <div class="kpi-value" id="kCash">—</div>
+      <div class="kpi-sub" id="kCashSub"></div>
     </div>
-
     <div class="kpi-card c-qr">
-      <div class="kpi-label"><span class="kpi-icon">📱</span>สแกน QR</div>
-      <div class="kpi-value" id="kpiQr">—</div>
-      <div class="kpi-sub" id="kpiQrSub"></div>
+      <div class="kpi-label">📱 สแกน QR</div>
+      <div class="kpi-value" id="kQr">—</div>
+      <div class="kpi-sub" id="kQrSub"></div>
     </div>
-
   </div>
 
-  <!-- CHART + MENU -->
-  <div class="bottom-grid">
-
+  <!-- Panels -->
+  <div class="panels">
     <div class="panel">
-      <div class="panel-header">
+      <div class="panel-head">
         <span class="panel-title">📊 ยอดขายตามช่วงเวลา</span>
         <span class="panel-badge" id="chartBadge">—</span>
       </div>
       <div class="panel-body">
-        <div class="chart-legend">
-          <span><span class="legend-dot" style="background:var(--qr)"></span>QR</span>
-          <span><span class="legend-dot" style="background:var(--cash)"></span>เงินสด</span>
+        <div class="legend">
+          <span><span class="ld" style="background:var(--qr)"></span>QR</span>
+          <span><span class="ld" style="background:var(--cash)"></span>เงินสด</span>
         </div>
-        <div id="chartArea"><div class="loading"><div class="spinner"></div> กำลังโหลด</div></div>
+        <div id="chartArea"><div class="loading">กำลังโหลด...</div></div>
       </div>
     </div>
-
     <div class="panel">
-      <div class="panel-header">
+      <div class="panel-head">
         <span class="panel-title">🏆 เมนูขายดี</span>
         <span class="panel-badge" id="menuBadge">—</span>
       </div>
       <div class="panel-body" style="padding:0 20px;">
-        <div id="menuArea"><div class="loading"><div class="spinner"></div> กำลังโหลด</div></div>
+        <div id="menuArea"><div class="loading">กำลังโหลด...</div></div>
       </div>
     </div>
-
   </div>
 </div>
 
 <script>
-  const API = "https://backend-mahalarb.onrender.com";
-  let currentPeriod = "day";
-  const PERIOD_TH = { day: "วันนี้", week: "7 วันย้อนหลัง", month: "เดือนนี้" };
+  const API="https://backend-mahalarb.onrender.com";
+  let period="day";
+  const PTH={day:"วันนี้",week:"7 วันย้อนหลัง",month:"เดือนนี้"};
 
-  function setPeriod(p) {
-    currentPeriod = p;
-    document.querySelectorAll(".tab").forEach(t =>
-      t.classList.toggle("active", t.dataset.period === p)
-    );
-    loadAll();
+  function setPeriod(p){ period=p; document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.p===p)); loadAll(); }
+  function fmt(n){ return Number(n).toLocaleString("th-TH",{maximumFractionDigits:0}); }
+  function fmtLbl(s){ if(period==="day") return s; const[,m,d]=s.split("-"); return `${+d}/${+m}`; }
+
+  function renderKPI(s){
+    document.getElementById("kRev").textContent=fmt(s.totalRevenue);
+    document.getElementById("kRevSub").textContent=`รวม${PTH[s.period]}`;
+    document.getElementById("kOrd").textContent=s.totalOrders;
+    document.getElementById("kOrdSub").textContent=`ออเดอร์${PTH[s.period]}`;
+    document.getElementById("kAvg").textContent=fmt(s.avgOrderValue);
+    document.getElementById("kCash").textContent=`฿${fmt(s.cashRevenue)}`;
+    document.getElementById("kCashSub").textContent=`${s.cashOrders} ออเดอร์`;
+    document.getElementById("kQr").textContent=`฿${fmt(s.qrRevenue)}`;
+    document.getElementById("kQrSub").textContent=`${s.qrOrders} ออเดอร์`;
+    const tot=s.totalRevenue||1;
+    const cp=Math.round((s.cashRevenue/tot)*100);
+    document.getElementById("sCash").style.width=cp+"%";
+    document.getElementById("sQr").style.width=(100-cp)+"%";
+    document.getElementById("sLcash").textContent=`เงินสด ฿${fmt(s.cashRevenue)}`;
+    document.getElementById("sLqr").textContent=`QR ฿${fmt(s.qrRevenue)}`;
+    const[sd,ed]=[s.startDate,s.endDate];
+    document.getElementById("pLabel").innerHTML=`ช่วงเวลา: <em>${sd}${sd!==ed?' → '+ed:''}</em>`;
   }
 
-  function fmtBaht(n) {
-    return Number(n).toLocaleString("th-TH", { maximumFractionDigits: 0 });
-  }
-  function fmtLabel(str, period) {
-    if (period === "day") return str;
-    const [, m, d] = str.split("-");
-    return `${parseInt(d)}/${parseInt(m)}`;
-  }
-
-  // ── KPI ──────────────────────────────────────────
-  function renderKPI(s) {
-    // total
-    document.getElementById("kpiRevenue").textContent = fmtBaht(s.totalRevenue);
-    document.getElementById("kpiRevSub").textContent  = `รวม${PERIOD_TH[s.period]}`;
-    // orders
-    document.getElementById("kpiOrders").textContent  = s.totalOrders;
-    document.getElementById("kpiOrdSub").textContent  = `ออเดอร์${PERIOD_TH[s.period]}`;
-    // avg
-    document.getElementById("kpiAvg").textContent     = fmtBaht(s.avgOrderValue);
-    // cash
-    document.getElementById("kpiCash").textContent    = `฿${fmtBaht(s.cashRevenue)}`;
-    document.getElementById("kpiCashSub").textContent = `${s.cashOrders} ออเดอร์`;
-    // qr
-    document.getElementById("kpiQr").textContent      = `฿${fmtBaht(s.qrRevenue)}`;
-    document.getElementById("kpiQrSub").textContent   = `${s.qrOrders} ออเดอร์`;
-
-    // split bar in total card
-    const total = s.totalRevenue || 1;
-    const cashPct = Math.round((s.cashRevenue / total) * 100);
-    const qrPct   = 100 - cashPct;
-    document.getElementById("splitCash").style.width = cashPct + "%";
-    document.getElementById("splitQr").style.width   = qrPct   + "%";
-    document.getElementById("splitCashLbl").textContent = `เงินสด ฿${fmtBaht(s.cashRevenue)}`;
-    document.getElementById("splitQrLbl").textContent   = `QR ฿${fmtBaht(s.qrRevenue)}`;
-
-    // period label
-    const [sd, ed] = [s.startDate, s.endDate];
-    document.getElementById("periodLabel").innerHTML =
-      `ช่วงเวลา: <span>${sd}${sd !== ed ? ' → ' + ed : ''}</span>`;
-  }
-
-  // ── CHART ─────────────────────────────────────────
-  function renderChart(s) {
-    const badge = s.period === "day" ? "รายชั่วโมง" :
-                  s.period === "week" ? "รายวัน 7 วัน" : "รายวัน (เดือนนี้)";
-    document.getElementById("chartBadge").textContent = badge;
-
-    const bars = s.chart;
-    if (!bars || bars.length === 0) {
-      document.getElementById("chartArea").innerHTML =
-        `<div class="chart-empty">ไม่มีข้อมูลในช่วงนี้</div>`;
-      return;
-    }
-
-    const maxRev = Math.max(...bars.map(b => b.revenue), 1);
-
-    const barsHTML = bars.map(b => {
-      const totalPct = Math.round((b.revenue / maxRev) * 100);
-      const cashH    = totalPct > 0 ? Math.round((b.cash / b.revenue) * totalPct) : 0;
-      const qrH      = totalPct - cashH;
-      const label    = fmtLabel(b.label, s.period);
-
-      return `
-        <div class="bar-col">
-          <div class="bar-stack" style="height:${Math.max(totalPct,2)}%">
-            <div class="tooltip">
-              รวม ฿${fmtBaht(b.revenue)} (${b.orders} ออเดอร์)<br>
-              <span class="t-cash">💵 เงินสด ฿${fmtBaht(b.cash)}</span><br>
-              <span class="t-qr">📱 QR ฿${fmtBaht(b.qr)}</span>
-            </div>
-            <div class="bar-qr"  style="height:${qrH}%"></div>
-            <div class="bar-cash" style="height:${cashH}%"></div>
-          </div>
-          <div class="bar-label">${label}</div>
-        </div>`;
+  function renderChart(s){
+    const badge=s.period==="day"?"รายชั่วโมง":s.period==="week"?"รายวัน 7 วัน":"รายวัน (เดือนนี้)";
+    document.getElementById("chartBadge").textContent=badge;
+    if(!s.chart||!s.chart.length){ document.getElementById("chartArea").innerHTML=`<div class="chart-empty">ไม่มีข้อมูล</div>`; return; }
+    const maxR=Math.max(...s.chart.map(b=>b.revenue),1);
+    const bars=s.chart.map(b=>{
+      const tp=Math.round((b.revenue/maxR)*100);
+      const ch=tp>0?Math.round((b.cash/b.revenue)*tp):0;
+      const qh=tp-ch;
+      return `<div class="bar-col">
+        <div class="bar-stack" style="height:${Math.max(tp,2)}%">
+          <div class="btip">รวม ฿${fmt(b.revenue)} (${b.orders} ออเดอร์)<br><span class="tc">💵 ฿${fmt(b.cash)}</span><br><span class="tq">📱 ฿${fmt(b.qr)}</span></div>
+          <div class="b-qr"  style="height:${qh}%"></div>
+          <div class="b-cash" style="height:${ch}%"></div>
+        </div>
+        <div class="bar-label">${fmtLbl(b.label)}</div>
+      </div>`;
     }).join("");
-
-    document.getElementById("chartArea").innerHTML =
-      `<div class="chart-bars">${barsHTML}</div>`;
+    document.getElementById("chartArea").innerHTML=`<div class="chart-bars">${bars}</div>`;
   }
 
-  // ── MENU TABLE ────────────────────────────────────
-  function renderMenu(data) {
-    document.getElementById("menuBadge").textContent = PERIOD_TH[data.period];
-
-    if (!data.items || data.items.length === 0) {
-      document.getElementById("menuArea").innerHTML =
-        `<div class="loading" style="padding:40px">ไม่มีข้อมูล</div>`;
-      return;
-    }
-
-    const maxQty = data.items[0].qty || 1;
-    const medals = ["🥇","🥈","🥉"];
-
-    const rows = data.items.map((item, i) => {
-      const pct = Math.round((item.qty / maxQty) * 100);
-      return `
-        <tr>
-          <td style="width:28px; color:${i<3?'var(--accent)':'var(--muted)'}; font-family:var(--mono); font-size:12px;">
-            ${i < 3 ? medals[i] : `#${i+1}`}
-          </td>
-          <td>
-            <div class="menu-name">${item.name}</div>
-            <div class="menu-cat">${item.category}</div>
-          </td>
-          <td style="padding:0 12px;">
-            <div class="rank-bar-wrap">
-              <div class="rank-bar"><div class="rank-bar-fill" style="width:${pct}%"></div></div>
-              <span class="qty-badge">${item.qty}</span>
-            </div>
-          </td>
-          <td><span class="revenue-val">฿${fmtBaht(item.revenue)}</span></td>
-        </tr>`;
+  function renderMenu(d){
+    const badge=PTH[d.period];
+    document.getElementById("menuBadge").textContent=badge;
+    if(!d.items||!d.items.length){ document.getElementById("menuArea").innerHTML=`<div class="loading">ไม่มีข้อมูล</div>`; return; }
+    const maxQ=d.items[0].qty||1;
+    const medals=["🥇","🥈","🥉"];
+    const rows=d.items.map((item,i)=>{
+      const pct=Math.round((item.qty/maxQ)*100);
+      return `<tr>
+        <td style="width:28px;font-size:13px;color:${i<3?'var(--accent)':'var(--muted)'};">${i<3?medals[i]:`#${i+1}`}</td>
+        <td><div class="mn">${item.name}</div><div class="mc">${item.category}</div></td>
+        <td style="padding:0 10px;"><div class="rank-wrap"><div class="rbar"><div class="rbar-fill" style="width:${pct}%"></div></div><span class="qty-pill">${item.qty}</span></div></td>
+        <td><span class="rev-val">฿${fmt(item.revenue)}</span></td>
+      </tr>`;
     }).join("");
-
-    document.getElementById("menuArea").innerHTML = `
-      <table class="menu-table">
-        <thead>
-          <tr>
-            <th></th><th>เมนู</th>
-            <th style="padding:0 12px;">จำนวน</th>
-            <th>รายได้</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>`;
+    document.getElementById("menuArea").innerHTML=`<table class="mtable"><thead><tr><th></th><th>เมนู</th><th style="padding:0 10px;">จำนวน</th><th>รายได้</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
 
-  // ── LOAD ALL ──────────────────────────────────────
-  async function loadAll() {
-    ["kpiRevenue","kpiOrders","kpiAvg","kpiCash","kpiQr"].forEach(id => {
-      document.getElementById(id).textContent = "—";
-    });
-    const loadingHTML = `<div class="loading"><div class="spinner"></div> กำลังโหลด</div>`;
-    document.getElementById("chartArea").innerHTML = loadingHTML;
-    document.getElementById("menuArea").innerHTML  = loadingHTML;
-
+  async function loadAll(){
+    ["kRev","kOrd","kAvg","kCash","kQr"].forEach(id=>document.getElementById(id).textContent="—");
+    const L=`<div class="loading">กำลังโหลด...</div>`;
+    document.getElementById("chartArea").innerHTML=L;
+    document.getElementById("menuArea").innerHTML=L;
     try {
-      const [sumRes, menuRes] = await Promise.all([
-        fetch(`${API}/dashboard/summary?period=${currentPeriod}`),
-        fetch(`${API}/dashboard/menu?period=${currentPeriod}`)
-      ]);
-      if (!sumRes.ok || !menuRes.ok) throw new Error("API error");
-      const [summary, menuData] = await Promise.all([sumRes.json(), menuRes.json()]);
-      if (summary.error) throw new Error(summary.error);
-
-      renderKPI(summary);
-      renderChart(summary);
-      renderMenu(menuData);
-
-    } catch (err) {
-      const errHTML = `<div class="loading" style="color:var(--danger)">❌ ${err.message}</div>`;
-      document.getElementById("chartArea").innerHTML = errHTML;
-      document.getElementById("menuArea").innerHTML  = errHTML;
+      const[sR,mR]=await Promise.all([fetch(`${API}/dashboard/summary?period=${period}`),fetch(`${API}/dashboard/menu?period=${period}`)]);
+      if(!sR.ok||!mR.ok) throw new Error("API error");
+      const[s,m]=await Promise.all([sR.json(),mR.json()]);
+      if(s.error) throw new Error(s.error);
+      renderKPI(s); renderChart(s); renderMenu(m);
+    } catch(e){
+      const err=`<div class="loading" style="color:var(--accent)">❌ ${e.message}</div>`;
+      document.getElementById("chartArea").innerHTML=err;
+      document.getElementById("menuArea").innerHTML=err;
     }
   }
 
+  function go(p){window.location.href=p;}
   loadAll();
-  setInterval(loadAll, 60000);
+  setInterval(loadAll,60000);
 </script>
 </body>
 </html>
