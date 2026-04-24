@@ -1,374 +1,241 @@
 <!DOCTYPE html>
 <html lang="th">
-
 <head>
-  <meta charset="UTF-8">
-  <title>Restaurant Menu</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เมนูอาหาร · มหาลาภ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #f7f3ee;
+    --surface: #ffffff;
+    --s2:      #fdf9f5;
+    --border:  #e8dfd5;
+    --accent:  #c2673a;
+    --accent2: #e8906a;
+    --green:   #3a8a5c;
+    --red:     #c23a3a;
+    --text:    #2c2118;
+    --muted:   #8c7b6e;
+    --font:    'Noto Serif Thai', serif;
+    --mono:    'DM Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+    background-size: 28px 28px; opacity: .4; pointer-events: none; z-index: 0;
+  }
 
-  <style>
-    body {
-      font-family: Arial;
-      background: #f5f5f5;
-      padding: 20px;
-    }
+  /* TOPBAR */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(247,243,238,.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px; height: 64px;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .back-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    color: var(--muted); padding: 7px 16px; border-radius: 10px;
+    cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 600; transition: all .2s;
+  }
+  .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .page-title { font-size: 17px; font-weight: 700; }
+  .page-title em { color: var(--accent); font-style: normal; }
+  .add-btn {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--accent); border: none; color: #fff;
+    padding: 9px 20px; border-radius: 12px;
+    cursor: pointer; font-family: var(--font); font-size: 14px; font-weight: 700;
+    box-shadow: 0 4px 14px rgba(194,103,58,.3); transition: all .2s;
+  }
+  .add-btn:hover { background: #ad5530; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(194,103,58,.4); }
 
-    h1 {
-      text-align: center;
-    }
+  /* MAIN */
+  .main { position: relative; z-index: 1; padding: 28px 32px; max-width: 1280px; margin: 0 auto; }
 
-    #categories {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+  /* CAT PILLS */
+  .cat-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+  .pill {
+    padding: 8px 20px; border-radius: 99px;
+    border: 1.5px solid var(--border); background: var(--surface);
+    color: var(--muted); font-family: var(--font); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+  }
+  .pill.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 4px 12px rgba(194,103,58,.25); }
+  .pill:not(.active):hover { border-color: var(--accent); color: var(--accent); }
 
-    .btn {
-      padding: 10px 15px;
-      margin: 5px;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      background: #ddd;
-    }
+  /* GRID */
+  .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
 
-    .btn.active {
-      background: orange;
-      color: white;
-    }
+  .menu-card {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 20px; padding: 22px 20px;
+    transition: all .22s ease;
+    animation: cardIn .3s ease both;
+  }
+  @keyframes cardIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  .menu-card:hover { border-color: var(--accent2); box-shadow: 0 8px 32px rgba(194,103,58,.1); transform: translateY(-2px); }
 
-    #menu {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 20px;
-    }
+  .card-cat { font-size: 11px; font-family: var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .card-name { font-size: 17px; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+  .card-price { font-size: 24px; font-weight: 800; color: var(--accent); font-family: var(--mono); margin-bottom: 18px; }
+  .card-price span { font-size: 13px; font-weight: 500; color: var(--muted); font-family: var(--font); }
 
-    .card {
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
+  .card-actions { display: flex; gap: 8px; }
+  .btn-edit, .btn-del {
+    flex: 1; padding: 9px 0; border-radius: 10px;
+    border: 1.5px solid var(--border);
+    font-family: var(--font); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+  }
+  .btn-edit { background: var(--s2); color: var(--text); }
+  .btn-edit:hover { border-color: var(--accent); color: var(--accent); background: rgba(194,103,58,.05); }
+  .btn-del { background: rgba(194,58,58,.06); color: var(--red); border-color: rgba(194,58,58,.2); }
+  .btn-del:hover { background: rgba(194,58,58,.12); }
 
-    .price {
-      color: green;
-      font-weight: bold;
-    }
+  /* MODAL */
+  .overlay { display:none; position:fixed; inset:0; z-index:200; background:rgba(44,33,24,.4); backdrop-filter:blur(6px); align-items:center; justify-content:center; }
+  .overlay.open { display:flex; }
+  .modal {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 24px; padding: 36px; width: 380px; max-width: 95vw;
+    box-shadow: 0 24px 80px rgba(44,33,24,.2);
+    animation: modalIn .25s cubic-bezier(.16,1,.3,1);
+  }
+  @keyframes modalIn { from { opacity:0; transform:scale(.96) translateY(8px); } to { opacity:1; transform:none; } }
+  .modal-title { font-size: 20px; font-weight: 800; margin-bottom: 24px; }
+  .modal-title em { color: var(--accent); font-style: normal; }
 
-    /* toast */
-    #toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: black;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 8px;
-      display: none;
-    }
+  .field { margin-bottom: 16px; }
+  .field label { display:block; font-size:11px; font-family:var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.8px; margin-bottom:7px; }
+  .field input, .field select {
+    width:100%; padding:12px 14px;
+    background:var(--s2); border:1.5px solid var(--border);
+    border-radius:12px; color:var(--text);
+    font-family:var(--font); font-size:15px; outline:none; transition:border-color .2s;
+  }
+  .field input:focus, .field select:focus { border-color:var(--accent); background:#fff; }
+  .field select option { background:#fff; }
 
-    /* form */
-    .input-field {
-      width: 100%;
-      padding: 12px;
-      /* 🔥 เพิ่มให้ใหญ่ขึ้นตามที่คุณต้องการ */
-      margin-bottom: 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-    }
+  .modal-actions { display:flex; gap:10px; margin-top:6px; }
+  .btn-save {
+    flex:2; padding:13px; background:var(--accent); border:none; border-radius:12px;
+    color:#fff; font-family:var(--font); font-size:15px; font-weight:700; cursor:pointer; transition:all .2s;
+    box-shadow: 0 4px 14px rgba(194,103,58,.3);
+  }
+  .btn-save:hover { background:#ad5530; }
+  .btn-cancel {
+    flex:1; padding:13px; background:var(--s2); border:1.5px solid var(--border);
+    border-radius:12px; color:var(--muted); font-family:var(--font); font-size:15px; cursor:pointer; transition:all .2s;
+  }
+  .btn-cancel:hover { border-color:var(--muted); color:var(--text); }
 
-    .input-field {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
+  /* TOAST */
+  .toast {
+    position:fixed; bottom:28px; right:28px; z-index:999;
+    padding:13px 22px; border-radius:14px; font-size:14px; font-weight:600;
+    box-shadow: 0 8px 32px rgba(0,0,0,.15);
+    transform:translateY(60px); opacity:0;
+    transition:all .3s cubic-bezier(.16,1,.3,1); pointer-events:none;
+  }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast.ok  { background:var(--green); color:#fff; }
+  .toast.err { background:var(--red);   color:#fff; }
 
-      box-sizing: border-box;
-      /* 🔥 ตัวแก้ปัญหาหลัก */
-    }
+  .empty { grid-column:1/-1; text-align:center; padding:80px; color:var(--muted); }
+  .empty-ico { font-size:48px; margin-bottom:12px; }
 
-    #formPopup>div {
-      background: white;
-      padding: 25px;
-      width: 350px;
-      margin: 100px auto;
-      border-radius: 12px;
-    }
-
-    .popup-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .popup-actions .btn {
-      flex: 1;
-    }
-  </style>
+  @media(max-width:600px){ .main{padding:16px;} .topbar{padding:0 16px;} }
+</style>
 </head>
-
 <body>
 
-  <h1>🍽 เมนูอาหาร</h1>
-
-  <div id="categories"></div>
-
-  <div style="text-align:center; margin-bottom:20px;">
-    <button onclick="openForm()" class="btn" style="background:green;color:white;">
-      ➕ เพิ่มเมนู
-    </button>
-
-    <button class="btn" onclick="goToPage('index.html')">
-      🏠 กลับหน้าหลัก
-    </button>
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="back-btn" onclick="go('index.html')">← หน้าหลัก</button>
+    <div class="page-title">📋 จัดการ<em>เมนู</em></div>
   </div>
+  <button class="add-btn" onclick="openForm()">+ เพิ่มเมนู</button>
+</div>
 
-  <!-- TOAST -->
-  <div id="toast"></div>
+<div class="main">
+  <div class="cat-wrap" id="catWrap"></div>
+  <div class="menu-grid" id="menuGrid"></div>
+</div>
 
-  <!-- FORM POPUP -->
-  <div id="formPopup"
-    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
-
-    <div style="background:white; padding:20px; width:350px; margin:100px auto; border-radius:10px;">
-      <h3>เพิ่มเมนู</h3>
-
-      <input id="name" class="input-field" placeholder="ชื่อเมนู">
-      <input id="price" class="input-field" type="number" placeholder="ราคา">
-
-      <select id="category" class="input-field">
-        <option value="">-- เลือกหมวดหมู่ --</option>
-      </select>
-
-      <button onclick="addMenu()" class="btn" style="background:orange;color:white;">บันทึก</button>
-      <button onclick="closeForm()" class="btn">ยกเลิก</button>
-      
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">เพิ่ม<em>เมนู</em></div>
+    <div class="field"><label>ชื่อเมนู</label><input id="fName" placeholder="เช่น ข้าวผัดกุ้ง"></div>
+    <div class="field"><label>ราคา (฿)</label><input id="fPrice" type="number" placeholder="0"></div>
+    <div class="field"><label>หมวดหมู่</label><select id="fCat"><option value="">-- เลือกหมวดหมู่ --</option></select></div>
+    <div class="modal-actions">
+      <button class="btn-save" onclick="saveMenu()">บันทึก</button>
+      <button class="btn-cancel" onclick="closeForm()">ยกเลิก</button>
     </div>
   </div>
+</div>
 
-  <div id="menu"></div>
+<div class="toast" id="toast"></div>
 
-  <script>
-    const API_URL = "https://backend-mahalarb.onrender.com";
+<script>
+  const API = "https://backend-mahalarb.onrender.com";
+  let allData=[], editMode=false, editId=null, currentCat="ทั้งหมด";
 
-    // const API_URL = "http://localhost:3000";  
-
-    let allData = [];
-    let editMode = false;
-    let editId = null;
-
-    async function fetchMenu() {
-      const res = await fetch(`${API_URL}/menu`);
-      const data = await res.json();
-
-      allData = data;
-
-      renderCategories(data);
-      renderMenu(data);
-    }
-
-    function renderCategories(data) {
-      const container = document.getElementById("categories");
-
-      const categories = ["ทั้งหมด", ...new Set(data.map(item => item.category_name))];
-
-      container.innerHTML = "";
-
-      categories.forEach(cat => {
-        const btn = document.createElement("button");
-        btn.className = "btn";
-        btn.innerText = cat;
-
-        btn.onclick = () => {
-          document.querySelectorAll("#categories .btn").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-
-          if (cat === "ทั้งหมด") {
-            renderMenu(allData);
-          } else {
-            const filtered = allData.filter(item => item.category_name === cat);
-            renderMenu(filtered);
-          }
-        };
-
-        container.appendChild(btn);
-      });
-
-      container.firstChild.classList.add("active");
-    }
-
-    function renderMenu(data) {
-      const menu = document.getElementById("menu");
-      menu.innerHTML = "";
-
-      data.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "card";
-
-        card.innerHTML = `
-      <h3>${item.name}</h3>
-      <p class="price">฿ ${item.price}</p>
-      <small>📦 ${item.category_name}</small>
-      <br><br>
-
-      <button class="btn"
-        onclick='editMenu(${item.id}, ${JSON.stringify(item.name)}, ${item.price}, ${JSON.stringify(item.category_name)})'>
-        ✏️ แก้ไข
-      </button>
-
-      <button class="btn" style="background:red;color:white;"
-        onclick="deleteMenu(${item.id})">
-        🗑 ลบ
-      </button>
-    `;
-
-        menu.appendChild(card);
-      });
-    }
-
-    // ---------- FORM ----------
-    function openForm() {
-      document.getElementById("formPopup").style.display = "block";
-      loadCategoriesToDropdown();
-    }
-
-    function closeForm() {
-      document.getElementById("formPopup").style.display = "none";
-    }
-
-    function loadCategoriesToDropdown() {
-      const select = document.getElementById("category");
-
-      const categories = [...new Set(allData.map(item => item.category_name))];
-
-      select.innerHTML = `<option value="">-- เลือกหมวดหมู่ --</option>`;
-
-      categories.forEach(cat => {
-        const option = document.createElement("option");
-        option.value = cat;
-        option.text = cat;
-        select.appendChild(option);
-      });
-    }
-
-    function showToast(message, isError = false) {
-      const toast = document.getElementById("toast");
-      toast.innerText = message;
-      toast.style.display = "block";
-      toast.style.background = isError ? "red" : "green";
-
-      setTimeout(() => {
-        toast.style.display = "none";
-      }, 2000);
-    }
-
-    function editMenu(id, name, price, category_name) {
-      openForm();
-
-      document.getElementById("name").value = name;
-      document.getElementById("price").value = price;
-      document.getElementById("category").value = category_name;
-
-      editMode = true;
-      editId = id;
-    }
-
-    async function addMenu() {
-      const name = document.getElementById("name").value.trim();
-      const price = document.getElementById("price").value;
-      const category_name = document.getElementById("category").value;
-
-      if (!name || !price || !category_name) {
-        showToast("กรอกข้อมูลให้ครบ!", true);
-        return;
-      }
-
-      try {
-        let res;
-
-        if (editMode) {
-          // ✏️ UPDATE
-          res = await fetch(`${API_URL}/menu/${editId}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              name,
-              price,
-              category_name
-            })
-          });
-        } else {
-          // ➕ CREATE
-          res = await fetch(`${API_URL}/menu`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              name,
-              price,
-              category_name
-            })
-          });
-        }
-
-        if (!res.ok) {
-          const err = await res.text();
-          console.log("ERROR:", err);
-          throw new Error();
-        }
-
-        showToast(editMode ? "แก้ไขสำเร็จ ✏️" : "เพิ่มเมนูสำเร็จ 🎉");
-
-        // reset
-        editMode = false;
-        editId = null;
-
-        document.getElementById("name").value = "";
-        document.getElementById("price").value = "";
-        document.getElementById("category").value = "";
-
-        closeForm();
-        fetchMenu();
-
-      } catch (err) {
-        showToast("เกิดข้อผิดพลาด ❌", true);
-      }
-    }
-
-    async function deleteMenu(id) {
-      if (!confirm("ต้องการลบเมนูนี้ใช่ไหม?")) return;
-
-      try {
-        const res = await fetch(`${API_URL}/menu/${id}`, {
-          method: "DELETE"
-        });
-
-        if (!res.ok) {
-          const err = await res.text();
-          console.log("ERROR:", err);
-          throw new Error();
-        }
-
-        showToast("ลบสำเร็จ 🗑");
-
-        fetchMenu();
-
-      } catch (err) {
-        showToast("ลบไม่สำเร็จ ❌", true);
-      }
-    }
-
-    function goToPage(page) {
-      window.location.href = page;
-    }
-
-    // start
-    fetchMenu();
-  </script>
-
+  async function fetchMenu() {
+    const res = await fetch(`${API}/menu`);
+    allData = await res.json();
+    renderCats(); renderGrid(allData);
+  }
+  function renderCats() {
+    const cats = ["ทั้งหมด",...new Set(allData.map(i=>i.category_name))];
+    document.getElementById("catWrap").innerHTML = cats.map(c=>
+      `<button class="pill ${c===currentCat?'active':''}" onclick="selectCat('${c}')">${c}</button>`
+    ).join("");
+  }
+  function selectCat(c) { currentCat=c; renderCats(); renderGrid(c==="ทั้งหมด"?allData:allData.filter(i=>i.category_name===c)); }
+  function renderGrid(data) {
+    if(!data.length){ document.getElementById("menuGrid").innerHTML=`<div class="empty"><div class="empty-ico">🍽</div>ไม่พบเมนู</div>`; return; }
+    document.getElementById("menuGrid").innerHTML = data.map(item=>`
+      <div class="menu-card">
+        <div class="card-cat">${item.category_name||"—"}</div>
+        <div class="card-name">${item.name}</div>
+        <div class="card-price">${Number(item.price).toLocaleString()} <span>บาท</span></div>
+        <div class="card-actions">
+          <button class="btn-edit" onclick='editMenu(${item.id},"${item.name}",${item.price},"${item.category_name}")'>✏️ แก้ไข</button>
+          <button class="btn-del" onclick="deleteMenu(${item.id})">🗑 ลบ</button>
+        </div>
+      </div>`).join("");
+  }
+  function fillCat() {
+    const cats=[...new Set(allData.map(i=>i.category_name))];
+    document.getElementById("fCat").innerHTML=`<option value="">-- เลือกหมวดหมู่ --</option>`+cats.map(c=>`<option value="${c}">${c}</option>`).join("");
+  }
+  function openForm(){ editMode=false; editId=null; document.getElementById("modalTitle").innerHTML='เพิ่ม<em style="color:var(--accent);font-style:normal">เมนู</em>'; fillCat(); document.getElementById("fName").value=""; document.getElementById("fPrice").value=""; document.getElementById("fCat").value=""; document.getElementById("overlay").classList.add("open"); }
+  function editMenu(id,name,price,cat){ editMode=true; editId=id; document.getElementById("modalTitle").innerHTML='แก้ไข<em style="color:var(--accent);font-style:normal">เมนู</em>'; fillCat(); document.getElementById("fName").value=name; document.getElementById("fPrice").value=price; document.getElementById("fCat").value=cat; document.getElementById("overlay").classList.add("open"); }
+  function closeForm(){ document.getElementById("overlay").classList.remove("open"); }
+  async function saveMenu(){
+    const name=document.getElementById("fName").value.trim(), price=document.getElementById("fPrice").value, category_name=document.getElementById("fCat").value;
+    if(!name||!price||!category_name) return toast("กรอกข้อมูลให้ครบ",false);
+    try {
+      const res=await fetch(editMode?`${API}/menu/${editId}`:`${API}/menu`,{method:editMode?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,price,category_name})});
+      if(!res.ok) throw new Error();
+      toast(editMode?"แก้ไขสำเร็จ ✏️":"เพิ่มเมนูสำเร็จ 🎉",true); closeForm(); fetchMenu();
+    } catch { toast("เกิดข้อผิดพลาด ❌",false); }
+  }
+  async function deleteMenu(id){
+    if(!confirm("ต้องการลบเมนูนี้ใช่ไหม?")) return;
+    try { await fetch(`${API}/menu/${id}`,{method:"DELETE"}); toast("ลบสำเร็จ 🗑",true); fetchMenu(); }
+    catch { toast("ลบไม่สำเร็จ ❌",false); }
+  }
+  function toast(msg,ok){ const el=document.getElementById("toast"); el.textContent=msg; el.className=`toast show ${ok?'ok':'err'}`; setTimeout(()=>el.classList.remove("show"),2500); }
+  function go(p){window.location.href=p;}
+  fetchMenu();
+</script>
 </body>
-
 </html>
