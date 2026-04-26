@@ -1,341 +1,744 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ออเดอร์ · มหาลาภ</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg:      #f7f3ee;
-    --surface: #ffffff;
-    --s2:      #fdf9f5;
-    --border:  #e8dfd5;
-    --accent:  #c2673a;
-    --green:   #3a8a5c;
-    --blue:    #3a6fa8;
-    --text:    #2c2118;
-    --muted:   #8c7b6e;
-    --orange:  #e07b34;
-    --font:    'Noto Serif Thai', serif;
-    --mono:    'DM Mono', monospace;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
-  body::before {
-    content:''; position:fixed; inset:0;
-    background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
-    background-size: 28px 28px; opacity:.4; pointer-events:none; z-index:0;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ออเดอร์ · มหาลาภ</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f3ee;
+      --surface: #ffffff;
+      --s2: #fdf9f5;
+      --border: #e8dfd5;
+      --accent: #c2673a;
+      --green: #3a8a5c;
+      --blue: #3a6fa8;
+      --text: #2c2118;
+      --muted: #8c7b6e;
+      --orange: #e07b34;
+      --font: 'Noto Serif Thai', serif;
+      --mono: 'DM Mono', monospace;
+    }
 
-  /* TOPBAR */
-  .topbar {
-    position:sticky; top:0; z-index:100;
-    background:rgba(247,243,238,.92); backdrop-filter:blur(12px);
-    border-bottom:1px solid var(--border);
-    display:flex; align-items:center; justify-content:space-between;
-    padding:0 32px; height:64px;
-  }
-  .topbar-left { display:flex; align-items:center; gap:14px; }
-  .back-btn {
-    background:var(--surface); border:1.5px solid var(--border); color:var(--muted);
-    padding:7px 16px; border-radius:10px; cursor:pointer;
-    font-family:var(--font); font-size:13px; font-weight:600; transition:all .2s;
-  }
-  .back-btn:hover { border-color:var(--accent); color:var(--accent); }
-  .page-title { font-size:17px; font-weight:700; }
-  .page-title em { color:var(--accent); font-style:normal; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  /* SUMMARY CHIPS */
-  .summary-bar {
-    position:relative; z-index:1;
-    display:flex; gap:10px; padding:16px 32px;
-    border-bottom:1px solid var(--border);
-    background:var(--surface);
-    flex-wrap:wrap;
-  }
-  .chip {
-    display:flex; align-items:center; gap:7px;
-    padding:8px 16px; border-radius:99px;
-    font-size:13px; font-weight:600; font-family:var(--mono);
-    border:1.5px solid var(--border); background:var(--s2);
-  }
-  .chip-dot { width:8px; height:8px; border-radius:50%; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
 
-  /* LAYOUT */
-  .layout {
-    position:relative; z-index:1;
-    display:grid; grid-template-columns:1fr 380px;
-    gap:0; min-height:calc(100vh - 128px);
-  }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: .4;
+      pointer-events: none;
+      z-index: 0;
+    }
 
-  /* LEFT — menu + cart */
-  .left-panel { padding:24px 28px; border-right:1px solid var(--border); }
-  .section-title { font-size:12px; font-family:var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:14px; }
+    /* TOPBAR */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(247, 243, 238, .92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 64px;
+    }
 
-  /* CAT PILLS */
-  .cat-wrap { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:18px; }
-  .pill { padding:7px 16px; border-radius:99px; border:1.5px solid var(--border); background:var(--surface); color:var(--muted); font-family:var(--font); font-size:12px; font-weight:600; cursor:pointer; transition:all .2s; }
-  .pill.active { background:var(--accent); border-color:var(--accent); color:#fff; }
-  .pill:not(.active):hover { border-color:var(--accent); color:var(--accent); }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
 
-  /* MENU LIST */
-  .menu-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-bottom:32px; }
-  .menu-item {
-    background:var(--surface); border:1.5px solid var(--border); border-radius:16px;
-    padding:14px 16px; cursor:pointer; transition:all .2s;
-    display:flex; flex-direction:column; gap:4px;
-  }
-  .menu-item:hover { border-color:var(--accent); box-shadow:0 4px 16px rgba(194,103,58,.1); transform:translateY(-1px); }
-  .menu-item:active { transform:scale(.97); }
-  .mi-name { font-size:14px; font-weight:700; line-height:1.3; }
-  .mi-cat  { font-size:10px; color:var(--muted); font-family:var(--mono); text-transform:uppercase; letter-spacing:.6px; }
-  .mi-price { font-size:16px; font-weight:800; color:var(--accent); font-family:var(--mono); margin-top:6px; }
-  .mi-add { align-self:flex-start; margin-top:8px; background:var(--accent); color:#fff; border:none; padding:5px 14px; border-radius:8px; font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; }
+    .back-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      padding: 7px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      transition: all .2s;
+    }
 
-  /* CART */
-  .cart-section { background:var(--s2); border:1.5px solid var(--border); border-radius:20px; padding:20px; }
-  .cart-empty { text-align:center; padding:28px; color:var(--muted); font-size:13px; }
-  .cart-item {
-    display:flex; align-items:center; gap:12px;
-    padding:10px 0; border-bottom:1px solid var(--border);
-  }
-  .cart-item:last-child { border-bottom:none; }
-  .ci-name { flex:1; font-size:14px; font-weight:600; }
-  .ci-qty { display:flex; align-items:center; gap:8px; }
-  .qty-btn { width:28px; height:28px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface); color:var(--text); font-size:15px; font-weight:700; cursor:pointer; transition:all .2s; display:flex; align-items:center; justify-content:center; }
-  .qty-btn:hover { border-color:var(--accent); color:var(--accent); }
-  .qty-num { font-family:var(--mono); font-size:14px; font-weight:600; min-width:20px; text-align:center; }
-  .ci-price { font-family:var(--mono); font-size:14px; font-weight:600; color:var(--accent); min-width:60px; text-align:right; }
+    .back-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
 
-  .cart-total {
-    display:flex; justify-content:space-between; align-items:center;
-    margin-top:16px; padding-top:16px; border-top:2px solid var(--border);
-  }
-  .total-label { font-size:15px; font-weight:700; }
-  .total-value { font-family:var(--mono); font-size:22px; font-weight:800; color:var(--accent); }
+    .page-title {
+      font-size: 17px;
+      font-weight: 700;
+    }
 
-  .confirm-btn {
-    width:100%; margin-top:14px; padding:14px;
-    background:var(--accent); border:none; border-radius:14px;
-    color:#fff; font-family:var(--font); font-size:16px; font-weight:700;
-    cursor:pointer; box-shadow:0 4px 16px rgba(194,103,58,.3); transition:all .2s;
-  }
-  .confirm-btn:hover { background:#ad5530; transform:translateY(-1px); }
-  .confirm-btn:active { transform:scale(.98); }
+    .page-title em {
+      color: var(--accent);
+      font-style: normal;
+    }
 
-  /* RIGHT — orders */
-  .right-panel { padding:24px 24px; overflow-y:auto; background:var(--s2); }
+    /* SUMMARY CHIPS */
+    .summary-bar {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 10px;
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-wrap: wrap;
+    }
 
-  .order-card {
-    background:var(--surface); border:1.5px solid var(--border);
-    border-radius:18px; padding:16px 18px; margin-bottom:12px;
-    animation:cardIn .3s ease both; transition:all .2s;
-  }
-  @keyframes cardIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:none;} }
-  .order-card.pending { border-left:4px solid var(--orange); }
-  .order-card.paid    { border-left:4px solid var(--green); opacity:.75; }
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--mono);
+      border: 1.5px solid var(--border);
+      background: var(--s2);
+    }
 
-  .order-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
-  .order-num { font-size:16px; font-weight:800; }
-  .order-num span { font-family:var(--mono); color:var(--accent); }
-  .status-badge { font-size:11px; font-family:var(--mono); font-weight:600; padding:4px 10px; border-radius:99px; }
-  .status-badge.pending { background:rgba(224,123,52,.12); color:var(--orange); }
-  .status-badge.paid    { background:rgba(58,138,92,.12);  color:var(--green); }
+    .chip-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
 
-  .order-items { font-size:13px; color:var(--muted); line-height:1.8; margin-bottom:10px; }
-  .order-foot { display:flex; justify-content:space-between; align-items:center; }
-  .order-total { font-family:var(--mono); font-size:15px; font-weight:700; color:var(--accent); }
-  .pay-btns { display:flex; gap:7px; }
-  .pay-btn {
-    padding:7px 14px; border-radius:10px; border:1.5px solid var(--border);
-    font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; transition:all .2s;
-  }
-  .pay-cash { background:rgba(58,138,92,.1); color:var(--green); border-color:rgba(58,138,92,.3); }
-  .pay-cash:hover { background:rgba(58,138,92,.2); }
-  .pay-qr { background:rgba(58,111,168,.1); color:var(--blue); border-color:rgba(58,111,168,.3); }
-  .pay-qr:hover { background:rgba(58,111,168,.2); }
+    /* LAYOUT */
+    .layout {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 0;
+      min-height: calc(100vh - 128px);
+    }
 
-  .done-badge { font-size:12px; color:var(--green); font-weight:700; font-family:var(--mono); }
+    /* LEFT — menu + cart */
+    .left-panel {
+      padding: 24px 28px;
+      border-right: 1px solid var(--border);
+    }
 
-  .empty-orders { text-align:center; padding:60px 20px; color:var(--muted); font-size:14px; }
+    .section-title {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
 
-  /* LOADING */
-  .loading-line { height:4px; background:linear-gradient(90deg,var(--accent),var(--orange),var(--accent)); background-size:200%; animation:shimmer 1.2s infinite; border-radius:99px; margin-bottom:12px; }
-  @keyframes shimmer { from{background-position:200%} to{background-position:0} }
+    /* CAT PILLS */
+    .cat-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 18px;
+    }
 
-  @media(max-width:900px){
-    .layout { grid-template-columns:1fr; }
-    .right-panel { border-top:1px solid var(--border); }
-  }
-  @media(max-width:600px){ .topbar{padding:0 16px;} .left-panel,.right-panel{padding:16px;} .summary-bar{padding:12px 16px;} }
-</style>
+    .pill {
+      padding: 7px 16px;
+      border-radius: 99px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .pill.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .pill:not(.active):hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* MENU LIST */
+    .menu-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .menu-item {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .menu-item:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 16px rgba(194, 103, 58, .1);
+      transform: translateY(-1px);
+    }
+
+    .menu-item:active {
+      transform: scale(.97);
+    }
+
+    .mi-name {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .mi-cat {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+    }
+
+    .mi-price {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--accent);
+      font-family: var(--mono);
+      margin-top: 6px;
+    }
+
+    .mi-add {
+      align-self: flex-start;
+      margin-top: 8px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 5px 14px;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* CART */
+    .cart-section {
+      background: var(--s2);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+    }
+
+    .cart-empty {
+      text-align: center;
+      padding: 28px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .cart-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cart-item:last-child {
+      border-bottom: none;
+    }
+
+    .ci-name {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .ci-qty {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qty-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .qty-num {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 600;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .ci-price {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+      min-width: 60px;
+      text-align: right;
+    }
+
+    .cart-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 2px solid var(--border);
+    }
+
+    .total-label {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .total-value {
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .confirm-btn {
+      width: 100%;
+      margin-top: 14px;
+      padding: 14px;
+      background: var(--accent);
+      border: none;
+      border-radius: 14px;
+      color: #fff;
+      font-family: var(--font);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(194, 103, 58, .3);
+      transition: all .2s;
+    }
+
+    .confirm-btn:hover {
+      background: #ad5530;
+      transform: translateY(-1px);
+    }
+
+    .confirm-btn:active {
+      transform: scale(.98);
+    }
+
+    /* RIGHT — orders */
+    .right-panel {
+      padding: 24px 24px;
+      overflow-y: auto;
+      background: var(--s2);
+    }
+
+    .order-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      animation: cardIn .3s ease both;
+      transition: all .2s;
+    }
+
+    @keyframes cardIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .order-card.pending {
+      border-left: 4px solid var(--orange);
+    }
+
+    .order-card.paid {
+      border-left: 4px solid var(--green);
+      opacity: .75;
+    }
+
+    .order-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .order-num {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .order-num span {
+      font-family: var(--mono);
+      color: var(--accent);
+    }
+
+    .status-badge {
+      font-size: 11px;
+      font-family: var(--mono);
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 99px;
+    }
+
+    .status-badge.pending {
+      background: rgba(224, 123, 52, .12);
+      color: var(--orange);
+    }
+
+    .status-badge.paid {
+      background: rgba(58, 138, 92, .12);
+      color: var(--green);
+    }
+
+    .order-items {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.8;
+      margin-bottom: 10px;
+    }
+
+    .order-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .order-total {
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .pay-btns {
+      display: flex;
+      gap: 7px;
+    }
+
+    .pay-btn {
+      padding: 7px 14px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .pay-cash {
+      background: rgba(58, 138, 92, .1);
+      color: var(--green);
+      border-color: rgba(58, 138, 92, .3);
+    }
+
+    .pay-cash:hover {
+      background: rgba(58, 138, 92, .2);
+    }
+
+    .pay-qr {
+      background: rgba(58, 111, 168, .1);
+      color: var(--blue);
+      border-color: rgba(58, 111, 168, .3);
+    }
+
+    .pay-qr:hover {
+      background: rgba(58, 111, 168, .2);
+    }
+
+    .done-badge {
+      font-size: 12px;
+      color: var(--green);
+      font-weight: 700;
+      font-family: var(--mono);
+    }
+
+    .empty-orders {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* LOADING */
+    .loading-line {
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--orange), var(--accent));
+      background-size: 200%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 99px;
+      margin-bottom: 12px;
+    }
+
+    @keyframes shimmer {
+      from {
+        background-position: 200%
+      }
+
+      to {
+        background-position: 0
+      }
+    }
+
+    @media(max-width:900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .right-panel {
+        border-top: 1px solid var(--border);
+      }
+    }
+
+    @media(max-width:600px) {
+      .topbar {
+        padding: 0 16px;
+      }
+
+      .left-panel,
+      .right-panel {
+        padding: 16px;
+      }
+
+      .summary-bar {
+        padding: 12px 16px;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="topbar">
-  <div class="topbar-left">
-    <button class="back-btn" onclick="go('index.html')">← หน้าหลัก</button>
-    <div class="page-title">🧾 จัดการ<em>ออเดอร์</em></div>
-  </div>
-</div>
-
-<div class="summary-bar">
-  <div class="chip"><span class="chip-dot" style="background:#aaa"></span>ทั้งหมด: <b id="sumTotal">0</b></div>
-  <div class="chip"><span class="chip-dot" style="background:var(--orange)"></span>รอชำระ: <b id="sumPending">0</b></div>
-  <div class="chip"><span class="chip-dot" style="background:var(--green)"></span>จ่ายแล้ว: <b id="sumPaid">0</b></div>
-</div>
-
-<div class="layout">
-  <!-- LEFT -->
-  <div class="left-panel">
-    <div class="section-title">เลือกเมนู</div>
-    <div class="cat-wrap" id="catWrap"></div>
-    <div class="menu-list" id="menuList"></div>
-
-    <div class="section-title">รายการที่เลือก</div>
-    <div class="cart-section">
-      <div id="cartBody"><div class="cart-empty">ยังไม่มีรายการ</div></div>
-      <div class="cart-total">
-        <span class="total-label">รวมทั้งหมด</span>
-        <span class="total-value">฿<span id="totalAmt">0.00</span></span>
-      </div>
-      <button class="confirm-btn" onclick="confirmOrder()">✅ ยืนยันออเดอร์</button>
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn" onclick="go('index.html')">← หน้าหลัก</button>
+      <div class="page-title">🧾 จัดการ<em>ออเดอร์</em></div>
     </div>
   </div>
 
-  <!-- RIGHT -->
-  <div class="right-panel">
-    <div class="section-title">ออเดอร์วันนี้</div>
-    <div id="orderList"><div class="loading-line"></div><div class="loading-line" style="width:60%"></div></div>
+  <div class="summary-bar">
+    <div class="chip"><span class="chip-dot" style="background:#aaa"></span>ทั้งหมด: <b id="sumTotal">0</b></div>
+    <div class="chip"><span class="chip-dot" style="background:var(--orange)"></span>รอชำระ: <b id="sumPending">0</b>
+    </div>
+    <div class="chip"><span class="chip-dot" style="background:var(--green)"></span>จ่ายแล้ว: <b id="sumPaid">0</b>
+    </div>
   </div>
-</div>
 
-<script>
-  const API = "https://backend-mahalarb.onrender.com";
-  let menuData=[], cart=[], currentCat=null;
+  <div class="layout">
+    <!-- LEFT -->
+    <div class="left-panel">
+      <div class="section-title">เลือกเมนู</div>
+      <div class="cat-wrap" id="catWrap"></div>
+      <div class="menu-list" id="menuList"></div>
 
-  // MENU
-  async function loadMenu(){
-    try {
-      const res=await fetch(`${API}/menu`);
-      menuData=await res.json();
-      menuData.sort((a,b)=>a.price-b.price);
-      renderCats(); renderMenuList();
-    } catch(e){ document.getElementById("menuList").innerHTML=`<p style="color:var(--muted)">โหลดเมนูไม่ได้: ${e.message}</p>`; }
-  }
-  function renderCats(){
-    const seen=new Map();
-    menuData.forEach(m=>{ if(!seen.has(m.category_id)) seen.set(m.category_id,m.category_name||"อื่นๆ"); });
-    let h=`<button class="pill ${!currentCat?'active':''}" onclick="selectCat(null)">ทั้งหมด</button>`;
-    seen.forEach((name,id)=>{ h+=`<button class="pill ${currentCat===id?'active':''}" onclick="selectCat(${id})">${name}</button>`; });
-    document.getElementById("catWrap").innerHTML=h;
-  }
-  function selectCat(c){ currentCat=c; renderCats(); renderMenuList(); }
-  function renderMenuList(){
-    const data=currentCat?menuData.filter(m=>m.category_id===currentCat):menuData;
-    document.getElementById("menuList").innerHTML=data.map(m=>`
+      <div class="section-title">รายการที่เลือก</div>
+      <div class="cart-section">
+        <div id="cartBody">
+          <div class="cart-empty">ยังไม่มีรายการ</div>
+        </div>
+        <div class="cart-total">
+          <span class="total-label">รวมทั้งหมด</span>
+          <span class="total-value">฿<span id="totalAmt">0.00</span></span>
+        </div>
+        <button class="confirm-btn" onclick="confirmOrder()">✅ ยืนยันออเดอร์</button>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right-panel">
+      <div class="section-title">ออเดอร์วันนี้</div>
+      <div id="orderList">
+        <div class="loading-line"></div>
+        <div class="loading-line" style="width:60%"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = "https://backend-mahalarb.onrender.com";
+    let menuData = [], cart = [], currentCat = null;
+
+    // MENU
+    async function loadMenu() {
+      try {
+        const res = await fetch(`${API}/menu`);
+        menuData = await res.json();
+        // menuData.sort((a, b) => a.price - b.price);
+        renderCats(); renderMenuList();
+      } catch (e) { document.getElementById("menuList").innerHTML = `<p style="color:var(--muted)">โหลดเมนูไม่ได้: ${e.message}</p>`; }
+    }
+    function renderCats() {
+      const seen = new Map();
+      menuData.forEach(m => { if (!seen.has(m.category_id)) seen.set(m.category_id, m.category_name || "อื่นๆ"); });
+      let h = `<button class="pill ${!currentCat ? 'active' : ''}" onclick="selectCat(null)">ทั้งหมด</button>`;
+      seen.forEach((name, id) => { h += `<button class="pill ${currentCat === id ? 'active' : ''}" onclick="selectCat(${id})">${name}</button>`; });
+      document.getElementById("catWrap").innerHTML = h;
+    }
+    function selectCat(c) { currentCat = c; renderCats(); renderMenuList(); }
+    function renderMenuList() {
+      const data = currentCat ? menuData.filter(m => m.category_id === currentCat) : menuData;
+      document.getElementById("menuList").innerHTML = data.map(m => `
       <div class="menu-item" onclick="addToCart(${m.id})">
-        <div class="mi-cat">${m.category_name||''}</div>
+        <div class="mi-cat">${m.category_name || ''}</div>
         <div class="mi-name">${m.name}</div>
         <div class="mi-price">${Number(m.price).toLocaleString()}฿</div>
         <button class="mi-add">+ เพิ่ม</button>
-      </div>`).join("")||`<p style="color:var(--muted);font-size:13px">ไม่มีเมนู</p>`;
-  }
+      </div>`).join("") || `<p style="color:var(--muted);font-size:13px">ไม่มีเมนู</p>`;
+    }
 
-  // CART
-  function addToCart(id){
-    const item=menuData.find(m=>m.id===id);
-    const exist=cart.find(c=>c.id===id);
-    if(exist) exist.qty++; else cart.push({...item,qty:1});
-    renderCart();
-  }
-  function changeQty(id,d){
-    const item=cart.find(c=>c.id===id); if(!item) return;
-    item.qty+=d;
-    if(item.qty<=0) cart=cart.filter(c=>c.id!==id);
-    renderCart();
-  }
-  function renderCart(){
-    let total=0, h="";
-    cart.forEach(c=>{
-      total+=c.price*c.qty;
-      h+=`<div class="cart-item">
+    // CART
+    function addToCart(id) {
+      const item = menuData.find(m => m.id === id);
+      const exist = cart.find(c => c.id === id);
+      if (exist) exist.qty++; else cart.push({ ...item, qty: 1 });
+      renderCart();
+    }
+    function changeQty(id, d) {
+      const item = cart.find(c => c.id === id); if (!item) return;
+      item.qty += d;
+      if (item.qty <= 0) cart = cart.filter(c => c.id !== id);
+      renderCart();
+    }
+    function renderCart() {
+      let total = 0, h = "";
+      cart.forEach(c => {
+        total += c.price * c.qty;
+        h += `<div class="cart-item">
         <div class="ci-name">${c.name}</div>
         <div class="ci-qty">
           <button class="qty-btn" onclick="changeQty(${c.id},-1)">−</button>
           <span class="qty-num">${c.qty}</span>
           <button class="qty-btn" onclick="changeQty(${c.id},1)">+</button>
         </div>
-        <div class="ci-price">${(c.price*c.qty).toFixed(2)}</div>
+        <div class="ci-price">${(c.price * c.qty).toFixed(2)}</div>
       </div>`;
-    });
-    document.getElementById("cartBody").innerHTML=h||`<div class="cart-empty">ยังไม่มีรายการ</div>`;
-    document.getElementById("totalAmt").textContent=total.toFixed(2);
-  }
+      });
+      document.getElementById("cartBody").innerHTML = h || `<div class="cart-empty">ยังไม่มีรายการ</div>`;
+      document.getElementById("totalAmt").textContent = total.toFixed(2);
+    }
 
-  // ORDER
-  async function confirmOrder(){
-    if(!cart.length) return alert("ยังไม่มีรายการ");
-    const items=cart.map(c=>({menu_id:c.id,quantity:c.qty,price:c.price}));
-    const res=await fetch(`${API}/order`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items})});
-    const data=await res.json();
-    if(!res.ok) return alert("สร้างออเดอร์ไม่สำเร็จ: "+(data.error||""));
-    alert("✅ สร้างออเดอร์ #"+(data.order_number??data.order_id));
-    cart=[]; renderCart(); loadOrders();
-  }
+    // ORDER
+    async function confirmOrder() {
+      if (!cart.length) return alert("ยังไม่มีรายการ");
+      const items = cart.map(c => ({ menu_id: c.id, quantity: c.qty, price: c.price }));
+      const res = await fetch(`${API}/order`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items }) });
+      const data = await res.json();
+      if (!res.ok) return alert("สร้างออเดอร์ไม่สำเร็จ: " + (data.error || ""));
+      alert("✅ สร้างออเดอร์ #" + (data.order_number ?? data.order_id));
+      cart = []; renderCart(); loadOrders();
+    }
 
-  function groupOrders(data){
-    const map={};
-    data.forEach(item=>{
-      if(!map[item.order_id]) map[item.order_id]={id:item.order_id,order_number:item.order_number,items:[],total:0,status:item.payment_status||"pending"};
-      map[item.order_id].items.push({name:item.menu_name,qty:item.quantity});
-      map[item.order_id].total+=item.quantity*item.unit_price;
-    });
-    return Object.values(map);
-  }
+    function groupOrders(data) {
+      const map = {};
+      data.forEach(item => {
+        if (!map[item.order_id]) map[item.order_id] = { id: item.order_id, order_number: item.order_number, items: [], total: 0, status: item.payment_status || "pending" };
+        map[item.order_id].items.push({ name: item.menu_name, qty: item.quantity });
+        map[item.order_id].total += item.quantity * item.unit_price;
+      });
+      return Object.values(map);
+    }
 
-  async function loadOrders(){
-    const res=await fetch(`${API}/orders`);
-    const data=await res.json();
-    const orders=groupOrders(data);
-    renderOrders(orders); renderSummary(orders);
-  }
+    async function loadOrders() {
+      const res = await fetch(`${API}/orders`);
+      const data = await res.json();
+      const orders = groupOrders(data);
+      renderOrders(orders); renderSummary(orders);
+    }
 
-  function renderOrders(orders){
-    if(!orders.length){ document.getElementById("orderList").innerHTML=`<div class="empty-orders">🍽 ยังไม่มีออเดอร์วันนี้</div>`; return; }
-    document.getElementById("orderList").innerHTML=orders.map(o=>{
-      const isPaid=o.status==="success";
-      return `<div class="order-card ${isPaid?'paid':'pending'}">
+    function renderOrders(orders) {
+      if (!orders.length) { document.getElementById("orderList").innerHTML = `<div class="empty-orders">🍽 ยังไม่มีออเดอร์วันนี้</div>`; return; }
+      document.getElementById("orderList").innerHTML = orders.map(o => {
+        const isPaid = o.status === "success";
+        return `<div class="order-card ${isPaid ? 'paid' : 'pending'}">
         <div class="order-head">
           <div class="order-num">Order <span>#${o.order_number}</span></div>
-          <div class="status-badge ${isPaid?'paid':'pending'}">${isPaid?'✓ จ่ายแล้ว':'⏳ รอชำระ'}</div>
+          <div class="status-badge ${isPaid ? 'paid' : 'pending'}">${isPaid ? '✓ จ่ายแล้ว' : '⏳ รอชำระ'}</div>
         </div>
-        <div class="order-items">${o.items.map(i=>`${i.name} × ${i.qty}`).join(' · ')}</div>
+        <div class="order-items">${o.items.map(i => `${i.name} × ${i.qty}`).join(' · ')}</div>
         <div class="order-foot">
           <div class="order-total">฿${o.total.toFixed(2)}</div>
-          <div>${!isPaid?`<div class="pay-btns"><button class="pay-btn pay-cash" onclick="pay(${o.id},'cash')">💵 เงินสด</button><button class="pay-btn pay-qr" onclick="pay(${o.id},'qr')">📱 QR</button></div>`:`<span class="done-badge">✓ เสร็จสิ้น</span>`}</div>
+          <div>${!isPaid ? `<div class="pay-btns"><button class="pay-btn pay-cash" onclick="pay(${o.id},'cash')">💵 เงินสด</button><button class="pay-btn pay-qr" onclick="pay(${o.id},'qr')">📱 QR</button></div>` : `<span class="done-badge">✓ เสร็จสิ้น</span>`}</div>
         </div>
       </div>`;
-    }).join("");
-  }
+      }).join("");
+    }
 
-  function renderSummary(orders){
-    const paid=orders.filter(o=>o.status==="success").length;
-    document.getElementById("sumTotal").textContent=orders.length;
-    document.getElementById("sumPending").textContent=orders.length-paid;
-    document.getElementById("sumPaid").textContent=paid;
-  }
+    function renderSummary(orders) {
+      const paid = orders.filter(o => o.status === "success").length;
+      document.getElementById("sumTotal").textContent = orders.length;
+      document.getElementById("sumPending").textContent = orders.length - paid;
+      document.getElementById("sumPaid").textContent = paid;
+    }
 
-  async function pay(id,method){
-    const res=await fetch(`${API}/pay`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({order_id:id,method})});
-    if(!res.ok) return alert("จ่ายเงินไม่สำเร็จ");
-    loadOrders();
-  }
+    async function pay(id, method) {
+      const res = await fetch(`${API}/pay`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ order_id: id, method }) });
+      if (!res.ok) return alert("จ่ายเงินไม่สำเร็จ");
+      loadOrders();
+    }
 
-  function go(p){window.location.href=p;}
-  loadMenu(); loadOrders();
-  setInterval(loadOrders,30000);
-</script>
+    function go(p) { window.location.href = p; }
+    loadMenu(); loadOrders();
+    setInterval(loadOrders, 30000);
+  </script>
 </body>
+
 </html>

@@ -220,18 +220,31 @@
   function editMenu(id,name,price,cat){ editMode=true; editId=id; document.getElementById("modalTitle").innerHTML='แก้ไข<em style="color:var(--accent);font-style:normal">เมนู</em>'; fillCat(); document.getElementById("fName").value=name; document.getElementById("fPrice").value=price; document.getElementById("fCat").value=cat; document.getElementById("overlay").classList.add("open"); }
   function closeForm(){ document.getElementById("overlay").classList.remove("open"); }
   async function saveMenu(){
-    const name=document.getElementById("fName").value.trim(), price=document.getElementById("fPrice").value, category_name=document.getElementById("fCat").value;
-    if(!name||!price||!category_name) return toast("กรอกข้อมูลให้ครบ",false);
+    const name = document.getElementById("fName").value.trim();
+    const price = parseFloat(document.getElementById("fPrice").value);  // FIX: parse float
+    const category_name = document.getElementById("fCat").value;
+    if(!name || isNaN(price) || price <= 0 || !category_name)
+      return toast("กรอกข้อมูลให้ครบ และราคาต้องมากกว่า 0", false);
     try {
-      const res=await fetch(editMode?`${API}/menu/${editId}`:`${API}/menu`,{method:editMode?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,price,category_name})});
-      if(!res.ok) throw new Error();
-      toast(editMode?"แก้ไขสำเร็จ ✏️":"เพิ่มเมนูสำเร็จ 🎉",true); closeForm(); fetchMenu();
-    } catch { toast("เกิดข้อผิดพลาด ❌",false); }
+      const url    = editMode ? `${API}/menu/${editId}` : `${API}/menu`;
+      const method = editMode ? "PUT" : "POST";
+      const res  = await fetch(url, { method, headers:{"Content-Type":"application/json"}, body:JSON.stringify({name, price, category_name}) });
+      const data = await res.json();
+      // FIX: แสดง error message จาก server แทน error ทั่วไป
+      if(!res.ok) return toast(data.error || "เกิดข้อผิดพลาด ❌", false);
+      toast(editMode ? "แก้ไขสำเร็จ ✏️" : "เพิ่มเมนูสำเร็จ 🎉", true);
+      closeForm(); fetchMenu();
+    } catch(e) { toast("เชื่อมต่อ server ไม่ได้ ❌", false); }
   }
   async function deleteMenu(id){
     if(!confirm("ต้องการลบเมนูนี้ใช่ไหม?")) return;
-    try { await fetch(`${API}/menu/${id}`,{method:"DELETE"}); toast("ลบสำเร็จ 🗑",true); fetchMenu(); }
-    catch { toast("ลบไม่สำเร็จ ❌",false); }
+    try {
+      const res  = await fetch(`${API}/menu/${id}`, { method:"DELETE" });
+      const data = await res.json();
+      // FIX: เช็ค HTTP status — 409 = มี order ใช้งานอยู่, 500 = DB error
+      if(!res.ok) return toast(data.error || "ลบไม่สำเร็จ ❌", false);
+      toast("ลบสำเร็จ 🗑", true); fetchMenu();
+    } catch(e) { toast("เชื่อมต่อ server ไม่ได้ ❌", false); }
   }
   function toast(msg,ok){ const el=document.getElementById("toast"); el.textContent=msg; el.className=`toast show ${ok?'ok':'err'}`; setTimeout(()=>el.classList.remove("show"),2500); }
   function go(p){window.location.href=p;}

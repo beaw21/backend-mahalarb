@@ -100,16 +100,24 @@ app.post("/menu", async (req, res) => {
 // ✏️ UPDATE MENU
 /////////////////////////////////////////
 app.put("/menu/:id", async (req, res) => {
-  const { id } = req.params;
-  const { name, price, category_name } = req.body;
+  const id = parseInt(req.params.id);           // FIX: parse to int
+  const { name, category_name } = req.body;
+  const price = parseFloat(req.body.price);     // FIX: parse to float
 
-  const { data: category } = await supabase
+  if (!name || isNaN(price) || !category_name) {
+    return res.status(400).json({ error: "Missing or invalid fields" });
+  }
+
+  // หา category_id จากชื่อ
+  const { data: category, error: catErr } = await supabase
     .from("categories")
     .select("id")
     .eq("name", category_name)
     .single();
 
-  if (!category) return res.status(400).json({ error: "Category not found" });
+  if (catErr || !category) {
+    return res.status(400).json({ error: "Category not found" });
+  }
 
   const { error } = await supabase
     .from("menu")
@@ -117,8 +125,8 @@ app.put("/menu/:id", async (req, res) => {
     .eq("id", id);
 
   if (error) {
-    console.error(error);
-    return res.status(500).json(error);
+    console.error("PUT /menu/:id error:", error);
+    return res.status(500).json({ error: error.message });
   }
 
   res.json({ message: "updated" });
@@ -128,9 +136,30 @@ app.put("/menu/:id", async (req, res) => {
 // 🟢 DELETE MENU
 /////////////////////////////////////////
 app.delete("/menu/:id", async (req, res) => {
-  const { id } = req.params;
+  const id = parseInt(req.params.id);           // FIX: parse to int
+
+  // FIX: ตรวจก่อนว่ามี order_items อ้างอิง menu นี้อยู่ไหม
+  // ถ้ามีให้ reject ทันที แทนที่จะให้ DB ขึ้น FK error
+  const { count } = await supabase
+    .from("order_items")
+    .select("id", { count: "exact", head: true })
+    .eq("menu_id", id);
+
+  if (count > 0) {
+    return res.status(409).json({
+      error: "ไม่สามารถลบได้ เมนูนี้มีออเดอร์ที่ใช้งานอยู่"
+    });
+  }
+
   const { error } = await supabase.from("menu").delete().eq("id", id);
-  res.json({ error });
+
+  // FIX: เช็ค error และส่ง status ที่ถูกต้อง
+  if (error) {
+    console.error("DELETE /menu/:id error:", error);
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json({ message: "deleted" });
 });
 
 /////////////////////////////////////////
@@ -179,17 +208,8 @@ app.post("/order", async (req, res) => {
 
     if (orderError) throw orderError;
 
-    console.log("RAW:", JSON.stringify(order));
-
-    // *** DEBUG: ดูว่า order จริงๆ เป็นอะไร ***
-    console.log("RPC raw result:", JSON.stringify(order));
-
-    // Supabase บางครั้ง return array แทน object เดี่ยว
-    const raw = Array.isArray(order) ? order[0] : order;
-    const result = typeof raw === "string" ? JSON.parse(raw) : raw;
-
-    console.log("Parsed result:", result);
-
+    // Supabase RPC returning jsonb comes back as a string — parse it
+    const result = typeof order === "string" ? JSON.parse(order) : order;
     res.json({ order_id: result.id, order_number: result.order_number });
 
   } catch (err) {
