@@ -1,209 +1,516 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>เมนูอาหาร · มหาลาภ</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg:      #f7f3ee;
-    --surface: #ffffff;
-    --s2:      #fdf9f5;
-    --border:  #e8dfd5;
-    --accent:  #c2673a;
-    --accent2: #e8906a;
-    --green:   #3a8a5c;
-    --red:     #c23a3a;
-    --text:    #2c2118;
-    --muted:   #8c7b6e;
-    --font:    'Noto Serif Thai', serif;
-    --mono:    'DM Mono', monospace;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
-  body::before {
-    content: ''; position: fixed; inset: 0;
-    background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
-    background-size: 28px 28px; opacity: .4; pointer-events: none; z-index: 0;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เมนูอาหาร · มหาลาภ</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f3ee;
+      --surface: #ffffff;
+      --s2: #fdf9f5;
+      --border: #e8dfd5;
+      --accent: #c2673a;
+      --accent2: #e8906a;
+      --green: #3a8a5c;
+      --red: #c23a3a;
+      --text: #2c2118;
+      --muted: #8c7b6e;
+      --font: 'Noto Serif Thai', serif;
+      --mono: 'DM Mono', monospace;
+    }
 
-  /* TOPBAR */
-  .topbar {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(247,243,238,.92); backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 32px; height: 64px;
-  }
-  .topbar-left { display: flex; align-items: center; gap: 14px; }
-  .back-btn {
-    display: flex; align-items: center; gap: 6px;
-    background: var(--surface); border: 1.5px solid var(--border);
-    color: var(--muted); padding: 7px 16px; border-radius: 10px;
-    cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 600; transition: all .2s;
-  }
-  .back-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .page-title { font-size: 17px; font-weight: 700; }
-  .page-title em { color: var(--accent); font-style: normal; }
-  .add-btn {
-    display: flex; align-items: center; gap: 7px;
-    background: var(--accent); border: none; color: #fff;
-    padding: 9px 20px; border-radius: 12px;
-    cursor: pointer; font-family: var(--font); font-size: 14px; font-weight: 700;
-    box-shadow: 0 4px 14px rgba(194,103,58,.3); transition: all .2s;
-  }
-  .add-btn:hover { background: #ad5530; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(194,103,58,.4); }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  /* MAIN */
-  .main { position: relative; z-index: 1; padding: 28px 32px; max-width: 1280px; margin: 0 auto; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
 
-  /* CAT PILLS */
-  .cat-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
-  .pill {
-    padding: 8px 20px; border-radius: 99px;
-    border: 1.5px solid var(--border); background: var(--surface);
-    color: var(--muted); font-family: var(--font); font-size: 13px; font-weight: 600;
-    cursor: pointer; transition: all .2s;
-  }
-  .pill.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 4px 12px rgba(194,103,58,.25); }
-  .pill:not(.active):hover { border-color: var(--accent); color: var(--accent); }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: .4;
+      pointer-events: none;
+      z-index: 0;
+    }
 
-  /* GRID */
-  .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
+    /* TOPBAR */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(247, 243, 238, .92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 64px;
+    }
 
-  .menu-card {
-    background: var(--surface); border: 1.5px solid var(--border);
-    border-radius: 20px; padding: 22px 20px;
-    transition: all .22s ease;
-    animation: cardIn .3s ease both;
-  }
-  @keyframes cardIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
-  .menu-card:hover { border-color: var(--accent2); box-shadow: 0 8px 32px rgba(194,103,58,.1); transform: translateY(-2px); }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
 
-  .card-cat { font-size: 11px; font-family: var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-  .card-name { font-size: 17px; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
-  .card-price { font-size: 24px; font-weight: 800; color: var(--accent); font-family: var(--mono); margin-bottom: 18px; }
-  .card-price span { font-size: 13px; font-weight: 500; color: var(--muted); font-family: var(--font); }
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      padding: 7px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      transition: all .2s;
+    }
 
-  .card-actions { display: flex; gap: 8px; }
-  .btn-edit, .btn-del {
-    flex: 1; padding: 9px 0; border-radius: 10px;
-    border: 1.5px solid var(--border);
-    font-family: var(--font); font-size: 13px; font-weight: 600;
-    cursor: pointer; transition: all .2s;
-  }
-  .btn-edit { background: var(--s2); color: var(--text); }
-  .btn-edit:hover { border-color: var(--accent); color: var(--accent); background: rgba(194,103,58,.05); }
-  .btn-del { background: rgba(194,58,58,.06); color: var(--red); border-color: rgba(194,58,58,.2); }
-  .btn-del:hover { background: rgba(194,58,58,.12); }
+    .back-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
 
-  /* MODAL */
-  .overlay { display:none; position:fixed; inset:0; z-index:200; background:rgba(44,33,24,.4); backdrop-filter:blur(6px); align-items:center; justify-content:center; }
-  .overlay.open { display:flex; }
-  .modal {
-    background: var(--surface); border: 1.5px solid var(--border);
-    border-radius: 24px; padding: 36px; width: 380px; max-width: 95vw;
-    box-shadow: 0 24px 80px rgba(44,33,24,.2);
-    animation: modalIn .25s cubic-bezier(.16,1,.3,1);
-  }
-  @keyframes modalIn { from { opacity:0; transform:scale(.96) translateY(8px); } to { opacity:1; transform:none; } }
-  .modal-title { font-size: 20px; font-weight: 800; margin-bottom: 24px; }
-  .modal-title em { color: var(--accent); font-style: normal; }
+    .page-title {
+      font-size: 17px;
+      font-weight: 700;
+    }
 
-  .field { margin-bottom: 16px; }
-  .field label { display:block; font-size:11px; font-family:var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:.8px; margin-bottom:7px; }
-  .field input, .field select {
-    width:100%; padding:12px 14px;
-    background:var(--s2); border:1.5px solid var(--border);
-    border-radius:12px; color:var(--text);
-    font-family:var(--font); font-size:15px; outline:none; transition:border-color .2s;
-  }
-  .field input:focus, .field select:focus { border-color:var(--accent); background:#fff; }
-  .field select option { background:#fff; }
+    .page-title em {
+      color: var(--accent);
+      font-style: normal;
+    }
 
-  .modal-actions { display:flex; gap:10px; margin-top:6px; }
-  .btn-save {
-    flex:2; padding:13px; background:var(--accent); border:none; border-radius:12px;
-    color:#fff; font-family:var(--font); font-size:15px; font-weight:700; cursor:pointer; transition:all .2s;
-    box-shadow: 0 4px 14px rgba(194,103,58,.3);
-  }
-  .btn-save:hover { background:#ad5530; }
-  .btn-cancel {
-    flex:1; padding:13px; background:var(--s2); border:1.5px solid var(--border);
-    border-radius:12px; color:var(--muted); font-family:var(--font); font-size:15px; cursor:pointer; transition:all .2s;
-  }
-  .btn-cancel:hover { border-color:var(--muted); color:var(--text); }
+    .add-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      padding: 9px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(194, 103, 58, .3);
+      transition: all .2s;
+    }
 
-  /* TOAST */
-  .toast {
-    position:fixed; bottom:28px; right:28px; z-index:999;
-    padding:13px 22px; border-radius:14px; font-size:14px; font-weight:600;
-    box-shadow: 0 8px 32px rgba(0,0,0,.15);
-    transform:translateY(60px); opacity:0;
-    transition:all .3s cubic-bezier(.16,1,.3,1); pointer-events:none;
-  }
-  .toast.show { transform:translateY(0); opacity:1; }
-  .toast.ok  { background:var(--green); color:#fff; }
-  .toast.err { background:var(--red);   color:#fff; }
+    .add-btn:hover {
+      background: #ad5530;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(194, 103, 58, .4);
+    }
 
-  .empty { grid-column:1/-1; text-align:center; padding:80px; color:var(--muted); }
-  .empty-ico { font-size:48px; margin-bottom:12px; }
+    /* MAIN */
+    .main {
+      position: relative;
+      z-index: 1;
+      padding: 28px 32px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
 
-  @media(max-width:600px){ .main{padding:16px;} .topbar{padding:0 16px;} }
-</style>
+    /* CAT PILLS */
+    .cat-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .pill {
+      padding: 8px 20px;
+      border-radius: 99px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .pill.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(194, 103, 58, .25);
+    }
+
+    .pill:not(.active):hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* GRID */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 18px;
+    }
+
+    .menu-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 22px 20px;
+      transition: all .22s ease;
+      animation: cardIn .3s ease both;
+    }
+
+    @keyframes cardIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .menu-card:hover {
+      border-color: var(--accent2);
+      box-shadow: 0 8px 32px rgba(194, 103, 58, .1);
+      transform: translateY(-2px);
+    }
+
+    .card-cat {
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .card-name {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    .card-price {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--accent);
+      font-family: var(--mono);
+      margin-bottom: 18px;
+    }
+
+    .card-price span {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      font-family: var(--font);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-edit,
+    .btn-del {
+      flex: 1;
+      padding: 9px 0;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .btn-edit {
+      background: var(--s2);
+      color: var(--text);
+    }
+
+    .btn-edit:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(194, 103, 58, .05);
+    }
+
+    .btn-del {
+      background: rgba(194, 58, 58, .06);
+      color: var(--red);
+      border-color: rgba(194, 58, 58, .2);
+    }
+
+    .btn-del:hover {
+      background: rgba(194, 58, 58, .12);
+    }
+
+    /* MODAL */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(44, 33, 24, .4);
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 24px;
+      padding: 36px;
+      width: 380px;
+      max-width: 95vw;
+      box-shadow: 0 24px 80px rgba(44, 33, 24, .2);
+      animation: modalIn .25s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(.96) translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 24px;
+    }
+
+    .modal-title em {
+      color: var(--accent);
+      font-style: normal;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 7px;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--s2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 15px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--accent);
+      background: #fff;
+    }
+
+    .field select option {
+      background: #fff;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .btn-save {
+      flex: 2;
+      padding: 13px;
+      background: var(--accent);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+      box-shadow: 0 4px 14px rgba(194, 103, 58, .3);
+    }
+
+    .btn-save:hover {
+      background: #ad5530;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      padding: 13px;
+      background: var(--s2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 15px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .btn-cancel:hover {
+      border-color: var(--muted);
+      color: var(--text);
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 999;
+      padding: 13px 22px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, .15);
+      transform: translateY(60px);
+      opacity: 0;
+      transition: all .3s cubic-bezier(.16, 1, .3, 1);
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.ok {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .toast.err {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .empty {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 80px;
+      color: var(--muted);
+    }
+
+    .empty-ico {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    @media(max-width:600px) {
+      .main {
+        padding: 16px;
+      }
+
+      .topbar {
+        padding: 0 16px;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="topbar">
-  <div class="topbar-left">
-    <button class="back-btn" onclick="go('index.html')">← หน้าหลัก</button>
-    <div class="page-title">📋 จัดการ<em>เมนู</em></div>
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn" onclick="go('index.html')">← หน้าหลัก</button>
+      <div class="page-title">📋 จัดการ<em>เมนู</em></div>
+    </div>
+    <button class="add-btn" onclick="openForm()">+ เพิ่มเมนู</button>
   </div>
-  <button class="add-btn" onclick="openForm()">+ เพิ่มเมนู</button>
-</div>
 
-<div class="main">
-  <div class="cat-wrap" id="catWrap"></div>
-  <div class="menu-grid" id="menuGrid"></div>
-</div>
+  <div class="main">
+    <div class="cat-wrap" id="catWrap"></div>
+    <div class="menu-grid" id="menuGrid"></div>
+  </div>
 
-<div class="overlay" id="overlay">
-  <div class="modal">
-    <div class="modal-title" id="modalTitle">เพิ่ม<em>เมนู</em></div>
-    <div class="field"><label>ชื่อเมนู</label><input id="fName" placeholder="เช่น ข้าวผัดกุ้ง"></div>
-    <div class="field"><label>ราคา (฿)</label><input id="fPrice" type="number" placeholder="0"></div>
-    <div class="field"><label>หมวดหมู่</label><select id="fCat"><option value="">-- เลือกหมวดหมู่ --</option></select></div>
-    <div class="modal-actions">
-      <button class="btn-save" onclick="saveMenu()">บันทึก</button>
-      <button class="btn-cancel" onclick="closeForm()">ยกเลิก</button>
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-title" id="modalTitle">เพิ่ม<em>เมนู</em></div>
+      <div class="field"><label>ชื่อเมนู</label><input id="fName" placeholder="เช่น ข้าวผัดกุ้ง"></div>
+      <div class="field"><label>ราคา (฿)</label><input id="fPrice" type="number" placeholder="0"></div>
+      <div class="field"><label>หมวดหมู่</label><select id="fCat">
+          <option value="">-- เลือกหมวดหมู่ --</option>
+        </select></div>
+      <div class="modal-actions">
+        <button class="btn-save" onclick="saveMenu()">บันทึก</button>
+        <button class="btn-cancel" onclick="closeForm()">ยกเลิก</button>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="toast" id="toast"></div>
+  <div class="toast" id="toast"></div>
 
-<script>
-  const API = "https://backend-mahalarb.onrender.com";
-  let allData=[], editMode=false, editId=null, currentCat="ทั้งหมด";
+  <script>
+    const API = "https://backend-mahalarb.onrender.com";
+    let allData = [], editMode = false, editId = null, currentCat = "ทั้งหมด";
 
-  async function fetchMenu() {
-    const res = await fetch(`${API}/menu`);
-    allData = await res.json();
-    renderCats(); renderGrid(allData);
-  }
-  function renderCats() {
-    const cats = ["ทั้งหมด",...new Set(allData.map(i=>i.category_name))];
-    document.getElementById("catWrap").innerHTML = cats.map(c=>
-      `<button class="pill ${c===currentCat?'active':''}" onclick="selectCat('${c}')">${c}</button>`
-    ).join("");
-  }
-  function selectCat(c) { currentCat=c; renderCats(); renderGrid(c==="ทั้งหมด"?allData:allData.filter(i=>i.category_name===c)); }
-  function renderGrid(data) {
-    if(!data.length){ document.getElementById("menuGrid").innerHTML=`<div class="empty"><div class="empty-ico">🍽</div>ไม่พบเมนู</div>`; return; }
-    document.getElementById("menuGrid").innerHTML = data.map(item=>`
+    async function fetchMenu() {
+      const res = await fetch(`${API}/menu`);
+      allData = await res.json();
+      renderCats(); renderGrid(allData);
+    }
+    function renderCats() {
+      const cats = ["ทั้งหมด", ...new Set(allData.map(i => i.category_name))];
+      document.getElementById("catWrap").innerHTML = cats.map(c =>
+        `<button class="pill ${c === currentCat ? 'active' : ''}" onclick="selectCat('${c}')">${c}</button>`
+      ).join("");
+    }
+    function selectCat(c) { currentCat = c; renderCats(); renderGrid(c === "ทั้งหมด" ? allData : allData.filter(i => i.category_name === c)); }
+    function renderGrid(data) {
+      if (!data.length) { document.getElementById("menuGrid").innerHTML = `<div class="empty"><div class="empty-ico">🍽</div>ไม่พบเมนู</div>`; return; }
+      document.getElementById("menuGrid").innerHTML = data.map(item => `
       <div class="menu-card">
-        <div class="card-cat">${item.category_name||"—"}</div>
+        <div class="card-cat">${item.category_name || "—"}</div>
         <div class="card-name">${item.name}</div>
         <div class="card-price">${Number(item.price).toLocaleString()} <span>บาท</span></div>
         <div class="card-actions">
@@ -211,44 +518,45 @@
           <button class="btn-del" onclick="deleteMenu(${item.id})">🗑 ลบ</button>
         </div>
       </div>`).join("");
-  }
-  function fillCat() {
-    const cats=[...new Set(allData.map(i=>i.category_name))];
-    document.getElementById("fCat").innerHTML=`<option value="">-- เลือกหมวดหมู่ --</option>`+cats.map(c=>`<option value="${c}">${c}</option>`).join("");
-  }
-  function openForm(){ editMode=false; editId=null; document.getElementById("modalTitle").innerHTML='เพิ่ม<em style="color:var(--accent);font-style:normal">เมนู</em>'; fillCat(); document.getElementById("fName").value=""; document.getElementById("fPrice").value=""; document.getElementById("fCat").value=""; document.getElementById("overlay").classList.add("open"); }
-  function editMenu(id,name,price,cat){ editMode=true; editId=id; document.getElementById("modalTitle").innerHTML='แก้ไข<em style="color:var(--accent);font-style:normal">เมนู</em>'; fillCat(); document.getElementById("fName").value=name; document.getElementById("fPrice").value=price; document.getElementById("fCat").value=cat; document.getElementById("overlay").classList.add("open"); }
-  function closeForm(){ document.getElementById("overlay").classList.remove("open"); }
-  async function saveMenu(){
-    const name = document.getElementById("fName").value.trim();
-    const price = parseFloat(document.getElementById("fPrice").value);  // FIX: parse float
-    const category_name = document.getElementById("fCat").value;
-    if(!name || isNaN(price) || price <= 0 || !category_name)
-      return toast("กรอกข้อมูลให้ครบ และราคาต้องมากกว่า 0", false);
-    try {
-      const url    = editMode ? `${API}/menu/${editId}` : `${API}/menu`;
-      const method = editMode ? "PUT" : "POST";
-      const res  = await fetch(url, { method, headers:{"Content-Type":"application/json"}, body:JSON.stringify({name, price, category_name}) });
-      const data = await res.json();
-      // FIX: แสดง error message จาก server แทน error ทั่วไป
-      if(!res.ok) return toast(data.error || "เกิดข้อผิดพลาด ❌", false);
-      toast(editMode ? "แก้ไขสำเร็จ ✏️" : "เพิ่มเมนูสำเร็จ 🎉", true);
-      closeForm(); fetchMenu();
-    } catch(e) { toast("เชื่อมต่อ server ไม่ได้ ❌", false); }
-  }
-  async function deleteMenu(id){
-    if(!confirm("ต้องการลบเมนูนี้ใช่ไหม?")) return;
-    try {
-      const res  = await fetch(`${API}/menu/${id}`, { method:"DELETE" });
-      const data = await res.json();
-      // FIX: เช็ค HTTP status — 409 = มี order ใช้งานอยู่, 500 = DB error
-      if(!res.ok) return toast(data.error || "ลบไม่สำเร็จ ❌", false);
-      toast("ลบสำเร็จ 🗑", true); fetchMenu();
-    } catch(e) { toast("เชื่อมต่อ server ไม่ได้ ❌", false); }
-  }
-  function toast(msg,ok){ const el=document.getElementById("toast"); el.textContent=msg; el.className=`toast show ${ok?'ok':'err'}`; setTimeout(()=>el.classList.remove("show"),2500); }
-  function go(p){window.location.href=p;}
-  fetchMenu();
-</script>
+    }
+    function fillCat() {
+      const cats = [...new Set(allData.map(i => i.category_name))];
+      document.getElementById("fCat").innerHTML = `<option value="">-- เลือกหมวดหมู่ --</option>` + cats.map(c => `<option value="${c}">${c}</option>`).join("");
+    }
+    function openForm() { editMode = false; editId = null; document.getElementById("modalTitle").innerHTML = 'เพิ่ม<em style="color:var(--accent);font-style:normal">เมนู</em>'; fillCat(); document.getElementById("fName").value = ""; document.getElementById("fPrice").value = ""; document.getElementById("fCat").value = ""; document.getElementById("overlay").classList.add("open"); }
+    function editMenu(id, name, price, cat) { editMode = true; editId = id; document.getElementById("modalTitle").innerHTML = 'แก้ไข<em style="color:var(--accent);font-style:normal">เมนู</em>'; fillCat(); document.getElementById("fName").value = name; document.getElementById("fPrice").value = price; document.getElementById("fCat").value = cat; document.getElementById("overlay").classList.add("open"); }
+    function closeForm() { document.getElementById("overlay").classList.remove("open"); }
+    async function saveMenu() {
+      const name = document.getElementById("fName").value.trim();
+      const price = parseFloat(document.getElementById("fPrice").value);  // FIX: parse float
+      const category_name = document.getElementById("fCat").value;
+      if (!name || isNaN(price) || price <= 0 || !category_name)
+        return toast("กรอกข้อมูลให้ครบ และราคาต้องมากกว่า 0", false);
+      try {
+        const url = editMode ? `${API}/menu/${editId}` : `${API}/menu`;
+        const method = editMode ? "PUT" : "POST";
+        const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, price, category_name }) });
+        const data = await res.json();
+        // FIX: แสดง error message จาก server แทน error ทั่วไป
+        if (!res.ok) return toast(data.error || "เกิดข้อผิดพลาด ❌", false);
+        toast(editMode ? "แก้ไขสำเร็จ ✏️" : "เพิ่มเมนูสำเร็จ 🎉", true);
+        closeForm(); fetchMenu();
+      } catch (e) { toast("เชื่อมต่อ server ไม่ได้ ❌", false); }
+    }
+    async function deleteMenu(id) {
+      if (!confirm("ต้องการลบเมนูนี้ใช่ไหม?")) return;
+      try {
+        const res = await fetch(`${API}/menu/${id}`, { method: "DELETE" });
+        const data = await res.json();
+        // FIX: เช็ค HTTP status — 409 = มี order ใช้งานอยู่, 500 = DB error
+        if (!res.ok) return toast(data.error || "ลบไม่สำเร็จ ❌", false);
+        toast("ลบสำเร็จ 🗑", true); fetchMenu();
+      } catch (e) { toast("เชื่อมต่อ server ไม่ได้ ❌", false); }
+    }
+    function toast(msg, ok) { const el = document.getElementById("toast"); el.textContent = msg; el.className = `toast show ${ok ? 'ok' : 'err'}`; setTimeout(() => el.classList.remove("show"), 2500); }
+    function go(p) { window.location.href = p; }
+    fetchMenu();
+  </script>
 </body>
+
 </html>
