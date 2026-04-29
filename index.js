@@ -21,11 +21,11 @@ function getTodayRangeUTC() {
   const d = nowTH.getUTCDate();
 
   // Thailand date string "YYYY-MM-DD" — used for order_date column
-  const todayTH = `${y}-${String(m + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const todayTH = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
   // UTC equivalents of Thailand midnight boundaries
   const start = new Date(Date.UTC(y, m, d, 0, 0, 0, 0) - TZ_OFFSET_MS);
-  const end   = new Date(Date.UTC(y, m, d, 23, 59, 59, 999) - TZ_OFFSET_MS);
+  const end = new Date(Date.UTC(y, m, d, 23, 59, 59, 999) - TZ_OFFSET_MS);
 
   return { start, end, todayTH };
 }
@@ -40,34 +40,36 @@ app.use(express.static("public"));
 /////////////////////////////////////////
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
+  process.env.SUPABASE_KEY,
 );
 
 const PORT = process.env.PORT || 3000;
 
 /////////////////////////////////////////
-// 🟢 GET MENU — sorted by price ASC
+// 🟢 GET MENU — sorted by price DESC
 /////////////////////////////////////////
 app.get("/menu", async (req, res) => {
   const { data, error } = await supabase
     .from("menu")
-    .select(`
+    .select(
+      `
       id,
       name,
       price,
       category_id,
       categories(name)
-    `)
-    .order("price", { ascending: false }); // FIX: sort by price ascending
+    `,
+    )
+    .order("price", { ascending: false }); // FIX: sort by price descending
 
   if (error) return res.status(500).json(error);
 
-  const formatted = data.map(item => ({
+  const formatted = data.map((item) => ({
     id: item.id,
     name: item.name,
     price: item.price,
     category_id: item.category_id,
-    category_name: item.categories?.name
+    category_name: item.categories?.name,
   }));
 
   res.json(formatted);
@@ -87,9 +89,9 @@ app.post("/menu", async (req, res) => {
 
   if (!category) return res.status(400).json({ error: "Category not found" });
 
-  const { error } = await supabase.from("menu").insert([
-    { name, price, category_id: category.id }
-  ]);
+  const { error } = await supabase
+    .from("menu")
+    .insert([{ name, price, category_id: category.id }]);
 
   if (error) return res.status(500).json(error);
 
@@ -100,9 +102,9 @@ app.post("/menu", async (req, res) => {
 // ✏️ UPDATE MENU
 /////////////////////////////////////////
 app.put("/menu/:id", async (req, res) => {
-  const id = parseInt(req.params.id);           // FIX: parse to int
+  const id = parseInt(req.params.id); // FIX: parse to int
   const { name, category_name } = req.body;
-  const price = parseFloat(req.body.price);     // FIX: parse to float
+  const price = parseFloat(req.body.price); // FIX: parse to float
 
   if (!name || isNaN(price) || !category_name) {
     return res.status(400).json({ error: "Missing or invalid fields" });
@@ -136,7 +138,7 @@ app.put("/menu/:id", async (req, res) => {
 // 🟢 DELETE MENU
 /////////////////////////////////////////
 app.delete("/menu/:id", async (req, res) => {
-  const id = parseInt(req.params.id);           // FIX: parse to int
+  const id = parseInt(req.params.id); // FIX: parse to int
 
   // FIX: ตรวจก่อนว่ามี order_items อ้างอิง menu นี้อยู่ไหม
   // ถ้ามีให้ reject ทันที แทนที่จะให้ DB ขึ้น FK error
@@ -147,7 +149,7 @@ app.delete("/menu/:id", async (req, res) => {
 
   if (count > 0) {
     return res.status(409).json({
-      error: "ไม่สามารถลบได้ เมนูนี้มีออเดอร์ที่ใช้งานอยู่"
+      error: "ไม่สามารถลบได้ เมนูนี้มีออเดอร์ที่ใช้งานอยู่",
     });
   }
 
@@ -198,12 +200,12 @@ app.post("/order", async (req, res) => {
       {
         p_today: todayTH,
         p_total: total,
-        p_items: items.map(i => ({
-          menu_id:    i.menu_id,
-          quantity:   i.quantity,
-          unit_price: i.price
-        }))
-      }
+        p_items: items.map((i) => ({
+          menu_id: i.menu_id,
+          quantity: i.quantity,
+          unit_price: i.price,
+        })),
+      },
     );
 
     if (orderError) throw orderError;
@@ -211,7 +213,6 @@ app.post("/order", async (req, res) => {
     // Supabase RPC returning jsonb comes back as a string — parse it
     const result = typeof order === "string" ? JSON.parse(order) : order;
     res.json({ order_id: result.id, order_number: result.order_number });
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "สร้างออเดอร์ไม่สำเร็จ" });
@@ -237,36 +238,38 @@ app.get("/orders", async (req, res) => {
     if (ordersError) throw ordersError;
     if (!todayOrders || todayOrders.length === 0) return res.json([]);
 
-    const orderIds = todayOrders.map(o => o.id);
+    const orderIds = todayOrders.map((o) => o.id);
 
     // Step 2: Get order_items for those orders
     const { data: items, error: itemsError } = await supabase
       .from("order_items")
-      .select(`
+      .select(
+        `
         order_id,
         quantity,
         unit_price,
         menu:menu_id(name)
-      `)
+      `,
+      )
       .in("order_id", orderIds);
 
     if (itemsError) throw itemsError;
 
     // Step 3: Build a lookup map for orders
     const orderMap = {};
-    todayOrders.forEach(o => {
+    todayOrders.forEach((o) => {
       orderMap[o.id] = o;
     });
 
     // Step 4: Flatten into the shape the frontend's groupOrders() expects
-    const result = items.map(item => ({
-      order_id:       item.order_id,
-      order_number:   orderMap[item.order_id]?.order_number,
-      menu_name:      item.menu?.name,
-      quantity:       item.quantity,
-      unit_price:     item.unit_price,
+    const result = items.map((item) => ({
+      order_id: item.order_id,
+      order_number: orderMap[item.order_id]?.order_number,
+      menu_name: item.menu?.name,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
       payment_status: orderMap[item.order_id]?.payment_status,
-      created_at:     orderMap[item.order_id]?.created_at
+      created_at: orderMap[item.order_id]?.created_at,
     }));
 
     // Step 5: Sort — pending first, then newest order_id first
@@ -278,7 +281,6 @@ app.get("/orders", async (req, res) => {
     });
 
     res.json(result);
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "โหลดออเดอร์ไม่สำเร็จ" });
@@ -297,25 +299,24 @@ app.post("/pay", async (req, res) => {
       .update({
         payment_status: "success",
         payment_method: method,
-        order_status: "paid"
+        order_status: "paid",
       })
       .eq("id", order_id);
 
     if (updateError) throw updateError;
 
-    const { error: payError } = await supabase
-      .from("payments")
-      .insert([{
+    const { error: payError } = await supabase.from("payments").insert([
+      {
         order_id,
         method,
         status: "success",
-        paid_at: new Date()
-      }]);
+        paid_at: new Date(),
+      },
+    ]);
 
     if (payError) throw payError;
 
     res.json({ message: "Payment success" });
-
   } catch (err) {
     console.error(err);
     res.status(500).json(err);
@@ -346,7 +347,7 @@ app.get("/debug", async (req, res) => {
   // Test 3: today TH date
   const TZ = 7 * 60 * 60 * 1000;
   const nowTH = new Date(Date.now() + TZ);
-  results.todayTH = `${nowTH.getUTCFullYear()}-${String(nowTH.getUTCMonth()+1).padStart(2,'0')}-${String(nowTH.getUTCDate()).padStart(2,'0')}`;
+  results.todayTH = `${nowTH.getUTCFullYear()}-${String(nowTH.getUTCMonth() + 1).padStart(2, "0")}-${String(nowTH.getUTCDate()).padStart(2, "0")}`;
 
   res.json(results);
 });
@@ -387,26 +388,28 @@ app.get("/dashboard/summary", async (req, res) => {
 
     if (period === "day") {
       // วันนี้ แสดงรายชั่วโมง
-      startDate = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      endDate   = startDate;
-      groupBy   = "hour";
+      startDate = `${y}-${String(mo + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      endDate = startDate;
+      groupBy = "hour";
     } else if (period === "week") {
       // 7 วันย้อนหลัง แสดงรายวัน
       const start = new Date(Date.UTC(y, mo, d) - TZ - 6 * 86400000);
       const startTH = new Date(start.getTime() + TZ);
-      startDate = `${startTH.getUTCFullYear()}-${String(startTH.getUTCMonth()+1).padStart(2,'0')}-${String(startTH.getUTCDate()).padStart(2,'0')}`;
-      endDate   = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      groupBy   = "day";
+      startDate = `${startTH.getUTCFullYear()}-${String(startTH.getUTCMonth() + 1).padStart(2, "0")}-${String(startTH.getUTCDate()).padStart(2, "0")}`;
+      endDate = `${y}-${String(mo + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      groupBy = "day";
     } else {
       // เดือนนี้ แสดงรายวัน
-      startDate = `${y}-${String(mo+1).padStart(2,'0')}-01`;
-      endDate   = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      groupBy   = "day";
+      startDate = `${y}-${String(mo + 1).padStart(2, "0")}-01`;
+      endDate = `${y}-${String(mo + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      groupBy = "day";
     }
 
     const { data: orders, error } = await supabase
       .from("orders")
-      .select("id, order_number, total_price, order_date, created_at, payment_status, payment_method")
+      .select(
+        "id, order_number, total_price, order_date, created_at, payment_status, payment_method",
+      )
       .eq("payment_status", "success")
       .gte("order_date", startDate)
       .lte("order_date", endDate)
@@ -415,34 +418,40 @@ app.get("/dashboard/summary", async (req, res) => {
     if (error) throw error;
 
     // รวมยอดขาย
-    const totalRevenue = orders.reduce((s, o) => s + parseFloat(o.total_price), 0);
-    const totalOrders  = orders.length;
+    const totalRevenue = orders.reduce(
+      (s, o) => s + parseFloat(o.total_price),
+      0,
+    );
+    const totalOrders = orders.length;
 
     // แยกยอดตาม payment_method
     const cashRevenue = orders
-      .filter(o => o.payment_method === "cash")
+      .filter((o) => o.payment_method === "cash")
       .reduce((s, o) => s + parseFloat(o.total_price), 0);
     const qrRevenue = orders
-      .filter(o => o.payment_method === "qr")
+      .filter((o) => o.payment_method === "qr")
       .reduce((s, o) => s + parseFloat(o.total_price), 0);
-    const cashOrders = orders.filter(o => o.payment_method === "cash").length;
-    const qrOrders   = orders.filter(o => o.payment_method === "qr").length;
+    const cashOrders = orders.filter((o) => o.payment_method === "cash").length;
+    const qrOrders = orders.filter((o) => o.payment_method === "qr").length;
 
     // Group ตาม day หรือ hour — แยก cash/qr ด้วย
     const grouped = {};
-    orders.forEach(o => {
+    orders.forEach((o) => {
       let key;
       if (groupBy === "hour") {
         const thTime = new Date(new Date(o.created_at).getTime() + TZ);
-        key = String(thTime.getUTCHours()).padStart(2,'0') + ":00";
+        key = String(thTime.getUTCHours()).padStart(2, "0") + ":00";
       } else {
         key = o.order_date;
       }
-      if (!grouped[key]) grouped[key] = { label: key, revenue: 0, cash: 0, qr: 0, orders: 0 };
+      if (!grouped[key])
+        grouped[key] = { label: key, revenue: 0, cash: 0, qr: 0, orders: 0 };
       grouped[key].revenue += parseFloat(o.total_price);
-      grouped[key].orders  += 1;
-      if (o.payment_method === "cash") grouped[key].cash += parseFloat(o.total_price);
-      if (o.payment_method === "qr")   grouped[key].qr   += parseFloat(o.total_price);
+      grouped[key].orders += 1;
+      if (o.payment_method === "cash")
+        grouped[key].cash += parseFloat(o.total_price);
+      if (o.payment_method === "qr")
+        grouped[key].qr += parseFloat(o.total_price);
     });
 
     res.json({
@@ -456,9 +465,8 @@ app.get("/dashboard/summary", async (req, res) => {
       qrRevenue,
       cashOrders,
       qrOrders,
-      chart: Object.values(grouped)
+      chart: Object.values(grouped),
     });
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -481,16 +489,16 @@ app.get("/dashboard/menu", async (req, res) => {
     let startDate, endDate;
 
     if (period === "day") {
-      startDate = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      endDate   = startDate;
+      startDate = `${y}-${String(mo + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      endDate = startDate;
     } else if (period === "week") {
       const start = new Date(Date.UTC(y, mo, d) - TZ - 6 * 86400000);
       const startTH = new Date(start.getTime() + TZ);
-      startDate = `${startTH.getUTCFullYear()}-${String(startTH.getUTCMonth()+1).padStart(2,'0')}-${String(startTH.getUTCDate()).padStart(2,'0')}`;
-      endDate   = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      startDate = `${startTH.getUTCFullYear()}-${String(startTH.getUTCMonth() + 1).padStart(2, "0")}-${String(startTH.getUTCDate()).padStart(2, "0")}`;
+      endDate = `${y}-${String(mo + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     } else {
-      startDate = `${y}-${String(mo+1).padStart(2,'0')}-01`;
-      endDate   = `${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      startDate = `${y}-${String(mo + 1).padStart(2, "0")}-01`;
+      endDate = `${y}-${String(mo + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     }
 
     // หา order_id ที่ paid ในช่วงนี้ก่อน
@@ -502,37 +510,40 @@ app.get("/dashboard/menu", async (req, res) => {
       .lte("order_date", endDate);
 
     if (ordErr) throw ordErr;
-    if (!paidOrders || paidOrders.length === 0) return res.json({ period, startDate, endDate, items: [] });
+    if (!paidOrders || paidOrders.length === 0)
+      return res.json({ period, startDate, endDate, items: [] });
 
-    const orderIds = paidOrders.map(o => o.id);
+    const orderIds = paidOrders.map((o) => o.id);
 
     // ดึง order_items พร้อม menu name และ category
     const { data: items, error: itemErr } = await supabase
       .from("order_items")
-      .select(`
+      .select(
+        `
         quantity,
         unit_price,
         menu:menu_id(id, name, category_id, categories(name))
-      `)
+      `,
+      )
       .in("order_id", orderIds);
 
     if (itemErr) throw itemErr;
 
     // Group by menu
     const menuMap = {};
-    items.forEach(i => {
+    items.forEach((i) => {
       const menuId = i.menu?.id;
       if (!menuId) return;
       if (!menuMap[menuId]) {
         menuMap[menuId] = {
-          menu_id:       menuId,
-          name:          i.menu.name,
-          category:      i.menu.categories?.name || "อื่นๆ",
-          qty:           0,
-          revenue:       0
+          menu_id: menuId,
+          name: i.menu.name,
+          category: i.menu.categories?.name || "อื่นๆ",
+          qty: 0,
+          revenue: 0,
         };
       }
-      menuMap[menuId].qty     += i.quantity;
+      menuMap[menuId].qty += i.quantity;
       menuMap[menuId].revenue += i.quantity * parseFloat(i.unit_price);
     });
 
@@ -540,7 +551,208 @@ app.get("/dashboard/menu", async (req, res) => {
     const result = Object.values(menuMap).sort((a, b) => b.qty - a.qty);
 
     res.json({ period, startDate, endDate, items: result });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
+/////////////////////////////////////////
+// 🟢 EXPENSES — LIST
+// GET /expenses?period=day|week|month
+/////////////////////////////////////////
+app.get("/expenses", async (req, res) => {
+  try {
+    const period = req.query.period || "day";
+    const { todayTH } = getTodayRangeUTC();
+    const [y, m] = todayTH.split("-").map(Number);
+
+    let startDate, endDate;
+    if (period === "day") {
+      startDate = endDate = todayTH;
+    } else if (period === "week") {
+      const d = new Date(todayTH);
+      d.setDate(d.getDate() - 6);
+      startDate = d.toISOString().slice(0, 10);
+      endDate = todayTH;
+    } else {
+      startDate = `${y}-${String(m).padStart(2, "0")}-01`;
+      endDate = todayTH;
+    }
+
+    const { data, error } = await supabase
+      .from("expenses")
+      .select("id, title, amount, category, expense_date, created_at")
+      .gte("expense_date", startDate)
+      .lte("expense_date", endDate)
+      .order("expense_date", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    // Group by category for summary
+    const byCategory = {};
+    data.forEach((e) => {
+      const cat = e.category || "ทั่วไป";
+      if (!byCategory[cat]) byCategory[cat] = 0;
+      byCategory[cat] += parseFloat(e.amount);
+    });
+
+    const totalExpense = data.reduce((s, e) => s + parseFloat(e.amount), 0);
+
+    res.json({
+      period,
+      startDate,
+      endDate,
+      totalExpense,
+      byCategory,
+      items: data,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/////////////////////////////////////////
+// 🟢 EXPENSES — CREATE
+// POST /expense  { title, amount, category, expense_date }
+/////////////////////////////////////////
+app.post("/expense", async (req, res) => {
+  try {
+    const { title, amount, category, expense_date } = req.body;
+
+    if (
+      !title ||
+      !amount ||
+      isNaN(parseFloat(amount)) ||
+      parseFloat(amount) <= 0
+    ) {
+      return res.status(400).json({ error: "ข้อมูลไม่ถูกต้อง" });
+    }
+
+    const { todayTH } = getTodayRangeUTC();
+
+    const { error } = await supabase.from("expenses").insert([
+      {
+        title,
+        amount: parseFloat(amount),
+        category: category || "ทั่วไป",
+        expense_date: expense_date || todayTH,
+      },
+    ]);
+
+    if (error) throw error;
+    res.json({ message: "บันทึกสำเร็จ" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/////////////////////////////////////////
+// 🟢 EXPENSES — DELETE
+// DELETE /expense/:id
+/////////////////////////////////////////
+app.delete("/expense/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { error } = await supabase.from("expenses").delete().eq("id", id);
+    if (error) throw error;
+    res.json({ message: "ลบสำเร็จ" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/////////////////////////////////////////
+// 🟢 PROFIT/LOSS SUMMARY
+// GET /dashboard/profit?period=day|week|month
+// Returns: revenue, expense, profit per day/period
+/////////////////////////////////////////
+app.get("/dashboard/profit", async (req, res) => {
+  try {
+    const period = req.query.period || "day";
+    const { todayTH } = getTodayRangeUTC();
+    const [y, m] = todayTH.split("-").map(Number);
+
+    let startDate, endDate;
+    if (period === "day") {
+      startDate = endDate = todayTH;
+    } else if (period === "week") {
+      const d = new Date(todayTH);
+      d.setDate(d.getDate() - 6);
+      startDate = d.toISOString().slice(0, 10);
+      endDate = todayTH;
+    } else {
+      startDate = `${y}-${String(m).padStart(2, "0")}-01`;
+      endDate = todayTH;
+    }
+
+    // Revenue (paid orders)
+    const { data: orders, error: ordErr } = await supabase
+      .from("orders")
+      .select("order_date, total_price, payment_method")
+      .eq("payment_status", "success")
+      .gte("order_date", startDate)
+      .lte("order_date", endDate);
+    if (ordErr) throw ordErr;
+
+    // Expenses
+    const { data: expenses, error: expErr } = await supabase
+      .from("expenses")
+      .select("expense_date, amount, category")
+      .gte("expense_date", startDate)
+      .lte("expense_date", endDate);
+    if (expErr) throw expErr;
+
+    // Build per-day map covering full range
+    const dayMap = {};
+    const cursor = new Date(startDate);
+    const last = new Date(endDate);
+    while (cursor <= last) {
+      const key = cursor.toISOString().slice(0, 10);
+      dayMap[key] = { date: key, revenue: 0, expense: 0, profit: 0 };
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    orders.forEach((o) => {
+      const k = o.order_date;
+      if (dayMap[k]) dayMap[k].revenue += parseFloat(o.total_price);
+    });
+    expenses.forEach((e) => {
+      const k = e.expense_date;
+      if (dayMap[k]) dayMap[k].expense += parseFloat(e.amount);
+    });
+    Object.values(dayMap).forEach((d) => {
+      d.profit = d.revenue - d.expense;
+    });
+
+    const totalRevenue = orders.reduce(
+      (s, o) => s + parseFloat(o.total_price),
+      0,
+    );
+    const totalExpense = expenses.reduce((s, e) => s + parseFloat(e.amount), 0);
+    const totalProfit = totalRevenue - totalExpense;
+
+    // Expense breakdown by category
+    const byCategory = {};
+    expenses.forEach((e) => {
+      const cat = e.category || "ทั่วไป";
+      if (!byCategory[cat]) byCategory[cat] = 0;
+      byCategory[cat] += parseFloat(e.amount);
+    });
+
+    res.json({
+      period,
+      startDate,
+      endDate,
+      totalRevenue,
+      totalExpense,
+      totalProfit,
+      byCategory,
+      chart: Object.values(dayMap),
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });

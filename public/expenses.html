@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>รายจ่าย · มหาลาภ</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f3ee;
+      --surface: #ffffff;
+      --s2: #fdf9f5;
+      --border: #e8dfd5;
+      --accent: #c2673a;
+      --green: #3a8a5c;
+      --red: #c23a3a;
+      --blue: #3a6fa8;
+      --text: #2c2118;
+      --muted: #8c7b6e;
+      --font: 'Noto Serif Thai', serif;
+      --mono: 'DM Mono', monospace;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: .4;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(247, 243, 238, .92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 64px;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .back-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      padding: 7px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      transition: all .2s;
+    }
+
+    .back-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .page-title {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .page-title em {
+      color: var(--accent);
+      font-style: normal;
+    }
+
+    .add-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--red);
+      border: none;
+      color: #fff;
+      padding: 9px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(194, 58, 58, .25);
+      transition: all .2s;
+    }
+
+    .add-btn:hover {
+      background: #a83030;
+      transform: translateY(-1px);
+    }
+
+    /* PERIOD TABS */
+    .period-bar {
+      position: relative;
+      z-index: 1;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 32px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .tab {
+      padding: 7px 18px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      transition: all .2s;
+    }
+
+    .tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(194, 103, 58, .25);
+    }
+
+    .tab:not(.active):hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* LAYOUT */
+    .layout {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 0;
+      min-height: calc(100vh - 128px);
+    }
+
+    /* SIDEBAR — summary */
+    .sidebar {
+      padding: 24px 20px;
+      border-right: 1px solid var(--border);
+      background: var(--s2);
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+
+    /* KPI mini */
+    .kpi-mini {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-mini::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .kpi-mini.c-exp::after {
+      background: var(--red);
+    }
+
+    .kpi-mini.c-count::after {
+      background: var(--blue);
+    }
+
+    .kpi-mini-label {
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 7px;
+    }
+
+    .kpi-mini-value {
+      font-size: 24px;
+      font-weight: 800;
+      font-family: var(--mono);
+    }
+
+    .kpi-mini.c-exp .kpi-mini-value {
+      color: var(--red);
+    }
+
+    .kpi-mini.c-count .kpi-mini-value {
+      color: var(--blue);
+    }
+
+    .kpi-mini-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Category breakdown */
+    .cat-section {
+      margin-top: 20px;
+    }
+
+    .cat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .cat-row:last-child {
+      border-bottom: none;
+    }
+
+    .cat-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .cat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .cat-amount {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--red);
+    }
+
+    .cat-bar-wrap {
+      margin-top: 4px;
+    }
+
+    .cat-bar {
+      height: 4px;
+      border-radius: 99px;
+      background: var(--border);
+      overflow: hidden;
+      margin-top: 2px;
+    }
+
+    .cat-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width .6s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    /* MAIN — expense list */
+    .exp-main {
+      padding: 24px 28px;
+    }
+
+    .date-group {
+      margin-bottom: 24px;
+    }
+
+    .date-label {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      padding-bottom: 10px;
+      border-bottom: 1.5px solid var(--border);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .date-total {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .exp-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all .2s;
+      animation: cardIn .25s ease both;
+    }
+
+    @keyframes cardIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .exp-card:hover {
+      box-shadow: 0 4px 16px rgba(44, 33, 24, .08);
+    }
+
+    .exp-cat-badge {
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-family: var(--mono);
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .exp-info {
+      flex: 1;
+    }
+
+    .exp-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .exp-date {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    .exp-amount {
+      font-family: var(--mono);
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--red);
+      min-width: 90px;
+      text-align: right;
+    }
+
+    .del-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(194, 58, 58, .2);
+      background: rgba(194, 58, 58, .06);
+      color: var(--red);
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s;
+      flex-shrink: 0;
+    }
+
+    .del-btn:hover {
+      background: rgba(194, 58, 58, .14);
+    }
+
+    .empty {
+      text-align: center;
+      padding: 80px;
+      color: var(--muted);
+    }
+
+    .empty-ico {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    /* MODAL */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(44, 33, 24, .4);
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 24px;
+      padding: 36px;
+      width: 420px;
+      max-width: 95vw;
+      box-shadow: 0 24px 80px rgba(44, 33, 24, .2);
+      animation: modalIn .25s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 24px;
+    }
+
+    .modal-title em {
+      color: var(--red);
+      font-style: normal;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 7px;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--s2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 15px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--red);
+      background: #fff;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .btn-save {
+      flex: 2;
+      padding: 13px;
+      background: var(--red);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+      box-shadow: 0 4px 14px rgba(194, 58, 58, .25);
+    }
+
+    .btn-save:hover {
+      background: #a83030;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      padding: 13px;
+      background: var(--s2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 15px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .btn-cancel:hover {
+      border-color: var(--muted);
+      color: var(--text);
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 999;
+      padding: 13px 22px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, .12);
+      transform: translateY(60px);
+      opacity: 0;
+      transition: all .3s cubic-bezier(.16, 1, .3, 1);
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.ok {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .toast.err {
+      background: var(--red);
+      color: #fff;
+    }
+
+    @media(max-width:900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+    }
+
+    @media(max-width:600px) {
+
+      .topbar,
+      .period-bar {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .exp-main {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn" onclick="go('index.html')">← หน้าหลัก</button>
+      <div class="page-title">💸 จัดการ<em>รายจ่าย</em></div>
+    </div>
+    <button class="add-btn" onclick="openForm()">+ บันทึกรายจ่าย</button>
+  </div>
+
+  <div class="period-bar">
+    <button class="tab active" data-p="day" onclick="setPeriod('day')">วันนี้</button>
+    <button class="tab" data-p="week" onclick="setPeriod('week')">สัปดาห์</button>
+    <button class="tab" data-p="month" onclick="setPeriod('month')">เดือนนี้</button>
+  </div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-title">สรุปรายจ่าย</div>
+      <div class="kpi-mini c-exp">
+        <div class="kpi-mini-label">💸 รายจ่ายรวม</div>
+        <div class="kpi-mini-value" id="kTotal">—</div>
+        <div class="kpi-mini-sub" id="kTotalSub"></div>
+      </div>
+      <div class="kpi-mini c-count">
+        <div class="kpi-mini-label">📋 จำนวนรายการ</div>
+        <div class="kpi-mini-value" id="kCount">—</div>
+        <div class="kpi-mini-sub">รายการ</div>
+      </div>
+
+      <div class="cat-section">
+        <div class="sidebar-title" style="margin-top:8px">แยกตามหมวด</div>
+        <div id="catBreakdown">
+          <p style="color:var(--muted);font-size:13px">กำลังโหลด...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN LIST -->
+    <div class="exp-main">
+      <div id="expList">
+        <div style="text-align:center;padding:60px;color:var(--muted)">กำลังโหลด...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-title">บันทึก<em>รายจ่าย</em></div>
+      <div class="field"><label>รายการ</label><input id="fTitle" placeholder="เช่น ซื้อวัตถุดิบ, ค่าแก๊ส"></div>
+      <div class="field"><label>จำนวนเงิน (฿)</label><input id="fAmount" type="number" placeholder="0" min="0"
+          step="0.01"></div>
+      <div class="field">
+        <label>หมวดหมู่</label>
+        <select id="fCat">
+          <option value="วัตถุดิบ">🥬 วัตถุดิบ</option>
+          <option value="ค่าแรง">👷 ค่าแรง</option>
+          <option value="ค่าน้ำไฟ">💡 ค่าน้ำไฟ</option>
+          <option value="ค่าเช่า">🏠 ค่าเช่า</option>
+          <option value="อุปกรณ์">🔧 อุปกรณ์</option>
+          <option value="การตลาด">📢 การตลาด</option>
+          <option value="ทั่วไป">📦 ทั่วไป</option>
+        </select>
+      </div>
+      <div class="field"><label>วันที่</label><input id="fDate" type="date"></div>
+      <div class="modal-actions">
+        <button class="btn-save" onclick="saveExpense()">บันทึก</button>
+        <button class="btn-cancel" onclick="closeForm()">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = "https://backend-mahalarb.onrender.com";
+    let period = "day";
+
+    // category colors
+    const CAT_COLORS = {
+      "วัตถุดิบ": "#c2673a", "ค่าแรง": "#3a6fa8", "ค่าน้ำไฟ": "#e0a034",
+      "ค่าเช่า": "#8a3a8a", "อุปกรณ์": "#3a8a8a", "การตลาด": "#3a8a5c", "ทั่วไป": "#8c7b6e"
+    };
+    function catColor(c) { return CAT_COLORS[c] || "#8c7b6e"; }
+
+    function setPeriod(p) {
+      period = p;
+      document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.p === p));
+      loadExpenses();
+    }
+
+    function fmt(n) { return Number(n).toLocaleString("th-TH", { maximumFractionDigits: 0 }); }
+    function fmtDate(s) {
+      const [y, m, d] = s.split("-");
+      return `${+d}/${+m}/${y}`;
+    }
+    const PTH = { day: "วันนี้", week: "7 วันย้อนหลัง", month: "เดือนนี้" };
+
+    async function loadExpenses() {
+      document.getElementById("kTotal").textContent = "—";
+      document.getElementById("kCount").textContent = "—";
+      document.getElementById("expList").innerHTML = `<div style="text-align:center;padding:60px;color:var(--muted)">กำลังโหลด...</div>`;
+      document.getElementById("catBreakdown").innerHTML = `<p style="color:var(--muted);font-size:13px">กำลังโหลด...</p>`;
+
+      try {
+        const res = await fetch(`${API}/expenses?period=${period}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        // KPI
+        document.getElementById("kTotal").textContent = `฿${fmt(data.totalExpense)}`;
+        document.getElementById("kTotalSub").textContent = PTH[period];
+        document.getElementById("kCount").textContent = data.items.length;
+
+        // Category breakdown
+        renderCatBreakdown(data.byCategory, data.totalExpense);
+
+        // List grouped by date
+        renderList(data.items);
+
+      } catch (e) { toast("โหลดไม่ได้: " + e.message, false); }
+    }
+
+    function renderCatBreakdown(byCategory, total) {
+      const entries = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
+      if (!entries.length) { document.getElementById("catBreakdown").innerHTML = `<p style="color:var(--muted);font-size:13px">ไม่มีข้อมูล</p>`; return; }
+      const maxAmt = entries[0][1] || 1;
+      document.getElementById("catBreakdown").innerHTML = entries.map(([cat, amt]) => `
+      <div class="cat-row">
+        <div style="flex:1">
+          <div class="cat-name"><span class="cat-dot" style="background:${catColor(cat)}"></span>${cat}</div>
+          <div class="cat-bar"><div class="cat-bar-fill" style="width:${Math.round(amt / maxAmt * 100)}%;background:${catColor(cat)}"></div></div>
+        </div>
+        <div class="cat-amount" style="margin-left:12px">฿${fmt(amt)}</div>
+      </div>`).join("");
+    }
+
+    function renderList(items) {
+      if (!items.length) { document.getElementById("expList").innerHTML = `<div class="empty"><div class="empty-ico">💸</div>ยังไม่มีรายจ่าย${PTH[period] ? 'ใน' + PTH[period] : ''}</div>`; return; }
+
+      // Group by date
+      const groups = {};
+      items.forEach(e => {
+        const d = e.expense_date;
+        if (!groups[d]) groups[d] = { date: d, items: [], total: 0 };
+        groups[d].items.push(e);
+        groups[d].total += parseFloat(e.amount);
+      });
+
+      document.getElementById("expList").innerHTML = Object.values(groups).map(g => `
+      <div class="date-group">
+        <div class="date-label">
+          <span>${fmtDate(g.date)}</span>
+          <span class="date-total">฿${fmt(g.total)}</span>
+        </div>
+        ${g.items.map(e => `
+          <div class="exp-card">
+            <span class="exp-cat-badge" style="background:${catColor(e.category || 'ทั่วไป')}22;color:${catColor(e.category || 'ทั่วไป')};border:1.5px solid ${catColor(e.category || 'ทั่วไป')}44">${e.category || 'ทั่วไป'}</span>
+            <div class="exp-info">
+              <div class="exp-title">${e.title}</div>
+              <div class="exp-date">${fmtDate(e.expense_date)}</div>
+            </div>
+            <div class="exp-amount">฿${fmt(e.amount)}</div>
+            <button class="del-btn" onclick="deleteExpense(${e.id})" title="ลบ">✕</button>
+          </div>`).join("")}
+      </div>`).join("");
+    }
+
+    // FORM
+    function openForm() {
+      const today = new Date();
+      const th = new Date(today.getTime() + 7 * 60 * 60 * 1000);
+      document.getElementById("fDate").value = th.toISOString().slice(0, 10);
+      document.getElementById("fTitle").value = "";
+      document.getElementById("fAmount").value = "";
+      document.getElementById("fCat").value = "วัตถุดิบ";
+      document.getElementById("overlay").classList.add("open");
+    }
+    function closeForm() { document.getElementById("overlay").classList.remove("open"); }
+
+    async function saveExpense() {
+      const title = document.getElementById("fTitle").value.trim();
+      const amount = parseFloat(document.getElementById("fAmount").value);
+      const category = document.getElementById("fCat").value;
+      const expense_date = document.getElementById("fDate").value;
+      if (!title || isNaN(amount) || amount <= 0) return toast("กรอกข้อมูลให้ครบและจำนวนเงินต้องมากกว่า 0", false);
+      try {
+        const res = await fetch(`${API}/expense`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, amount, category, expense_date }) });
+        const data = await res.json();
+        if (!res.ok) return toast(data.error || "เกิดข้อผิดพลาด", false);
+        toast("บันทึกสำเร็จ ✓", true); closeForm(); loadExpenses();
+      } catch (e) { toast("เชื่อมต่อ server ไม่ได้", false); }
+    }
+
+    async function deleteExpense(id) {
+      if (!confirm("ต้องการลบรายการนี้?")) return;
+      try {
+        const res = await fetch(`${API}/expense/${id}`, { method: "DELETE" });
+        const data = await res.json();
+        if (!res.ok) return toast(data.error || "ลบไม่สำเร็จ", false);
+        toast("ลบสำเร็จ 🗑", true); loadExpenses();
+      } catch (e) { toast("เชื่อมต่อ server ไม่ได้", false); }
+    }
+
+    function toast(msg, ok) { const el = document.getElementById("toast"); el.textContent = msg; el.className = `toast show ${ok ? 'ok' : 'err'}`; setTimeout(() => el.classList.remove("show"), 2500); }
+    function go(p) { window.location.href = p; }
+    loadExpenses();
+  </script>
+</body>
+
+</html>

@@ -20,6 +20,7 @@
       --blue: #3a6fa8;
       --cash: #3a8a5c;
       --qr: #3a6fa8;
+      --red: #c23a3a;
       --text: #2c2118;
       --muted: #8c7b6e;
       --font: 'Noto Serif Thai', serif;
@@ -657,6 +658,20 @@
       </div>
     </div>
 
+    <!-- PROFIT ROW -->
+    <div class="kpi-bot" style="margin-bottom:28px">
+      <div class="kpi-card" id="profitCard" style="border-left:4px solid var(--green)">
+        <div class="kpi-label">📈 กำไรสุทธิ</div>
+        <div class="kpi-value" id="kProfit" style="color:var(--green)">—</div>
+        <div class="kpi-sub" id="kProfitSub"></div>
+      </div>
+      <div class="kpi-card" style="border-left:4px solid var(--red)">
+        <div class="kpi-label">💸 รายจ่ายรวม</div>
+        <div class="kpi-value" id="kExp" style="color:var(--red);font-size:24px">—</div>
+        <div class="kpi-sub" id="kExpSub"></div>
+      </div>
+    </div>
+
     <!-- Panels -->
     <div class="panels">
       <div class="panel">
@@ -684,6 +699,24 @@
             <div class="loading">กำลังโหลด...</div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFIT/LOSS CHART -->
+  <div class="panel" style="margin-top:20px">
+    <div class="panel-head">
+      <span class="panel-title">📈 กำไร / ขาดทุน รายวัน</span>
+      <span class="panel-badge" id="profitBadge">—</span>
+    </div>
+    <div class="panel-body">
+      <div class="legend">
+        <span><span class="ld" style="background:var(--green)"></span>รายรับ</span>
+        <span><span class="ld" style="background:var(--red)"></span>รายจ่าย</span>
+        <span><span class="ld" style="background:#8c7b6e"></span>กำไร/ขาดทุน</span>
+      </div>
+      <div id="profitChart">
+        <div class="loading">กำลังโหลด...</div>
       </div>
     </div>
   </div>
@@ -757,21 +790,69 @@
     }
 
     async function loadAll() {
-      ["kRev", "kOrd", "kAvg", "kCash", "kQr"].forEach(id => document.getElementById(id).textContent = "—");
+      ["kRev", "kOrd", "kAvg", "kCash", "kQr", "kProfit", "kExp"].forEach(id => document.getElementById(id).textContent = "—");
       const L = `<div class="loading">กำลังโหลด...</div>`;
       document.getElementById("chartArea").innerHTML = L;
       document.getElementById("menuArea").innerHTML = L;
+      document.getElementById("profitChart").innerHTML = L;
       try {
-        const [sR, mR] = await Promise.all([fetch(`${API}/dashboard/summary?period=${period}`), fetch(`${API}/dashboard/menu?period=${period}`)]);
+        const [sR, mR, pR] = await Promise.all([
+          fetch(`${API}/dashboard/summary?period=${period}`),
+          fetch(`${API}/dashboard/menu?period=${period}`),
+          fetch(`${API}/dashboard/profit?period=${period}`)
+        ]);
         if (!sR.ok || !mR.ok) throw new Error("API error");
-        const [s, m] = await Promise.all([sR.json(), mR.json()]);
+        const [s, m, p] = await Promise.all([sR.json(), mR.json(), pR.json()]);
         if (s.error) throw new Error(s.error);
         renderKPI(s); renderChart(s); renderMenu(m);
+        if (!pR.ok || p.error) { document.getElementById("profitChart").innerHTML = `<div class="loading" style="color:var(--accent)">❌ ${p.error || 'error'}</div>`; }
+        else { renderProfit(p); }
       } catch (e) {
         const err = `<div class="loading" style="color:var(--accent)">❌ ${e.message}</div>`;
         document.getElementById("chartArea").innerHTML = err;
         document.getElementById("menuArea").innerHTML = err;
       }
+    }
+
+    function renderProfit(p) {
+      const isProfit = p.totalProfit >= 0;
+      const profitColor = isProfit ? "var(--green)" : "var(--red)";
+      document.getElementById("kProfit").textContent = `${isProfit ? '' : '-'}฿${fmt(Math.abs(p.totalProfit))}`;
+      document.getElementById("kProfit").style.color = profitColor;
+      document.getElementById("kProfitSub").textContent = isProfit ? "กำไร 🎉" : "ขาดทุน ⚠️";
+      document.getElementById("profitCard").style.borderLeftColor = profitColor;
+      document.getElementById("kExp").textContent = `฿${fmt(p.totalExpense)}`;
+      document.getElementById("kExpSub").textContent = `รายจ่าย${PTH[p.period]}`;
+
+      const badge = p.period === "day" ? "รายวัน" : p.period === "week" ? "7 วัน" : "เดือนนี้";
+      document.getElementById("profitBadge").textContent = badge;
+
+      if (!p.chart || !p.chart.length) { document.getElementById("profitChart").innerHTML = `<div class="chart-empty">ไม่มีข้อมูล</div>`; return; }
+
+      const maxVal = Math.max(...p.chart.map(d => Math.max(d.revenue, d.expense)), 1);
+
+      const bars = p.chart.map(d => {
+        const rh = Math.round((d.revenue / maxVal) * 100);
+        const eh = Math.round((d.expense / maxVal) * 100);
+        const profit = d.revenue - d.expense;
+        const pColor = profit >= 0 ? "var(--green)" : "var(--red)";
+        const [, mo, dy] = d.date.split("-");
+        const lbl = p.period === "day" ? d.date : `${+dy}/${+mo}`;
+        return `
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0;height:100%;justify-content:flex-end">
+          <div style="width:100%;display:flex;align-items:flex-end;gap:2px;height:${Math.max(Math.max(rh, eh), 2)}%;position:relative;cursor:pointer" class="bar-stack">
+            <div class="btip">
+              รายรับ ฿${fmt(d.revenue)}<br>
+              <span style="color:var(--red)">รายจ่าย ฿${fmt(d.expense)}</span><br>
+              <span style="color:${pColor}">${profit >= 0 ? "กำไร" : "ขาดทุน"} ฿${fmt(Math.abs(profit))}</span>
+            </div>
+            <div style="flex:1;height:${rh > 0 ? Math.round(rh / Math.max(rh, eh) * 100) : 0}%;background:var(--green);border-radius:4px 4px 0 0;min-height:${d.revenue > 0 ? 2 : 0}px"></div>
+            <div style="flex:1;height:${eh > 0 ? Math.round(eh / Math.max(rh, eh) * 100) : 0}%;background:var(--red);border-radius:4px 4px 0 0;min-height:${d.expense > 0 ? 2 : 0}px"></div>
+          </div>
+          <div class="bar-label">${lbl}</div>
+        </div>`;
+      }).join("");
+      document.getElementById("profitChart").innerHTML = `<div class="chart-bars">${bars}</div>`;
     }
 
     function go(p) { window.location.href = p; }
