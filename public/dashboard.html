@@ -815,44 +815,129 @@
     }
 
     function renderProfit(p) {
+      // ── KPI ──────────────────────────────────────────
       const isProfit = p.totalProfit >= 0;
-      const profitColor = isProfit ? "var(--green)" : "var(--red)";
-      document.getElementById("kProfit").textContent = `${isProfit ? '' : '-'}฿${fmt(Math.abs(p.totalProfit))}`;
+      const profitColor = isProfit ? "#3a8a5c" : "#c23a3a";
+      document.getElementById("kProfit").textContent = `${isProfit ? "" : "-"}฿${fmt(Math.abs(p.totalProfit))}`;
       document.getElementById("kProfit").style.color = profitColor;
       document.getElementById("kProfitSub").textContent = isProfit ? "กำไร 🎉" : "ขาดทุน ⚠️";
       document.getElementById("profitCard").style.borderLeftColor = profitColor;
       document.getElementById("kExp").textContent = `฿${fmt(p.totalExpense)}`;
       document.getElementById("kExpSub").textContent = `รายจ่าย${PTH[p.period]}`;
+      document.getElementById("profitBadge").textContent =
+        p.period === "day" ? "รายวัน" : p.period === "week" ? "7 วัน" : "เดือนนี้";
 
-      const badge = p.period === "day" ? "รายวัน" : p.period === "week" ? "7 วัน" : "เดือนนี้";
-      document.getElementById("profitBadge").textContent = badge;
+      const el = document.getElementById("profitChart");
+      if (!p.chart || !p.chart.length) {
+        el.innerHTML = `<div class="chart-empty">ไม่มีข้อมูล</div>`; return;
+      }
 
-      if (!p.chart || !p.chart.length) { document.getElementById("profitChart").innerHTML = `<div class="chart-empty">ไม่มีข้อมูล</div>`; return; }
+      // ── SVG histogram ────────────────────────────────
+      const W = el.clientWidth || 600;
+      const H = 220;          // chart area height (px)
+      const PAD_L = 64;       // left axis
+      const PAD_R = 12;
+      const PAD_T = 16;
+      const PAD_B = 48;       // bottom for labels
+      const chartW = W - PAD_L - PAD_R;
+      const chartH = H - PAD_T - PAD_B;
 
-      const maxVal = Math.max(...p.chart.map(d => Math.max(d.revenue, d.expense)), 1);
+      const days = p.chart;
+      const n = days.length;
+      const maxVal = Math.max(...days.map(d => Math.max(d.revenue, d.expense)), 1);
 
-      const bars = p.chart.map(d => {
-        const rh = Math.round((d.revenue / maxVal) * 100);
-        const eh = Math.round((d.expense / maxVal) * 100);
+      // y-axis: 5 ticks
+      const tickCount = 5;
+      const tickStep = Math.ceil(maxVal / tickCount / 1000) * 1000 || 1;
+      const yMax = tickStep * tickCount;
+
+      function yPx(val) { return PAD_T + chartH - (val / yMax) * chartH; }
+
+      const grpW = chartW / n;
+      const barW = Math.max(grpW * 0.3, 4);   // each bar width
+      const gap = Math.max(grpW * 0.05, 2);  // gap between revenue & expense bar
+
+      // ── build SVG parts ──────────────────────────────
+      let gridLines = "", yLabels = "", bars = "", xLabels = "", profitLine = "", dots = "";
+      const profitPts = [];
+
+      // grid + y-axis labels
+      for (let i = 0; i <= tickCount; i++) {
+        const v = tickStep * i;
+        const y = yPx(v);
+        gridLines += `<line x1="${PAD_L}" y1="${y}" x2="${W - PAD_R}" y2="${y}" stroke="#e8dfd5" stroke-width="1"/>`;
+        yLabels += `<text x="${PAD_L - 8}" y="${y + 4}" text-anchor="end" fill="#8c7b6e" font-size="11" font-family="DM Mono,monospace">${v >= 1000 ? (v / 1000) + "K" : v}</text>`;
+      }
+
+      // bars + x labels
+      days.forEach((d, i) => {
+        const cx = PAD_L + i * grpW + grpW / 2;
+        const rY = yPx(d.revenue);
+        const eY = yPx(d.expense);
+        const baseY = yPx(0);
+        const rX = cx - barW - gap / 2;
+        const eX = cx + gap / 2;
         const profit = d.revenue - d.expense;
-        const pColor = profit >= 0 ? "var(--green)" : "var(--red)";
-        const [, mo, dy] = d.date.split("-");
-        const lbl = p.period === "day" ? d.date : `${+dy}/${+mo}`;
-        return `
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0;height:100%;justify-content:flex-end">
-          <div style="width:100%;display:flex;align-items:flex-end;gap:2px;height:${Math.max(Math.max(rh, eh), 2)}%;position:relative;cursor:pointer" class="bar-stack">
-            <div class="btip">
-              รายรับ ฿${fmt(d.revenue)}<br>
-              <span style="color:var(--red)">รายจ่าย ฿${fmt(d.expense)}</span><br>
-              <span style="color:${pColor}">${profit >= 0 ? "กำไร" : "ขาดทุน"} ฿${fmt(Math.abs(profit))}</span>
-            </div>
-            <div style="flex:1;height:${rh > 0 ? Math.round(rh / Math.max(rh, eh) * 100) : 0}%;background:var(--green);border-radius:4px 4px 0 0;min-height:${d.revenue > 0 ? 2 : 0}px"></div>
-            <div style="flex:1;height:${eh > 0 ? Math.round(eh / Math.max(rh, eh) * 100) : 0}%;background:var(--red);border-radius:4px 4px 0 0;min-height:${d.expense > 0 ? 2 : 0}px"></div>
-          </div>
-          <div class="bar-label">${lbl}</div>
-        </div>`;
-      }).join("");
-      document.getElementById("profitChart").innerHTML = `<div class="chart-bars">${bars}</div>`;
+        const pColor = profit >= 0 ? "#3a8a5c" : "#c23a3a";
+
+        // revenue bar
+        if (d.revenue > 0)
+          bars += `<rect x="${rX}" y="${rY}" width="${barW}" height="${baseY - rY}" rx="3" fill="#3a8a5c" opacity="0.85">
+          <title>รายรับ ฿${fmt(d.revenue)}</title></rect>`;
+
+        // expense bar
+        if (d.expense > 0)
+          bars += `<rect x="${eX}" y="${eY}" width="${barW}" height="${baseY - eY}" rx="3" fill="#c23a3a" opacity="0.75">
+          <title>รายจ่าย ฿${fmt(d.expense)}</title></rect>`;
+
+        // profit dot point for line
+        profitPts.push({ x: cx, y: yPx(Math.max(profit, 0)), profit, pColor, d });
+
+        // profit value label above bar group (only if nonzero)
+        if (profit !== 0) {
+          const labelY = yPx(Math.max(d.revenue, d.expense)) - 6;
+          bars += `<text x="${cx}" y="${labelY}" text-anchor="middle" fill="${pColor}" font-size="10" font-family="DM Mono,monospace" font-weight="600">${profit >= 0 ? "+" : ""}${profit >= 1000 || profit <= -1000 ? (profit / 1000).toFixed(1) + "K" : profit}</text>`;
+        }
+
+        // x-axis label
+        const [, mo, dy2] = d.date.split("-");
+        const lbl = p.period === "day" ? d.date : `${+dy2}/${+mo}`;
+        xLabels += `<text x="${cx}" y="${H - 8}" text-anchor="middle" fill="#8c7b6e" font-size="11" font-family="DM Mono,monospace">${lbl}</text>`;
+      });
+
+      // profit/loss polyline
+      if (profitPts.length > 1) {
+        const lineCoords = profitPts.map(pt => `${pt.x},${pt.y}`).join(" ");
+        profitLine = `<polyline points="${lineCoords}" fill="none" stroke="#8c7b6e" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>`;
+      }
+
+      // profit dots
+      profitPts.forEach(pt => {
+        dots += `<circle cx="${pt.x}" cy="${pt.y}" r="4" fill="${pt.pColor}" stroke="white" stroke-width="1.5">
+        <title>${pt.profit >= 0 ? "กำไร" : "ขาดทุน"} ฿${fmt(Math.abs(pt.profit))}\nรายรับ ฿${fmt(pt.d.revenue)}\nรายจ่าย ฿${fmt(pt.d.expense)}</title>
+      </circle>`;
+      });
+
+      // baseline
+      const baseLineY = yPx(0);
+      const baseline = `<line x1="${PAD_L}" y1="${baseLineY}" x2="${W - PAD_R}" y2="${baseLineY}" stroke="#2c2118" stroke-width="1.5" opacity="0.3"/>`;
+
+      el.innerHTML = `
+      <svg width="100%" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;display:block">
+        ${gridLines}
+        ${baseline}
+        ${yLabels}
+        ${bars}
+        ${profitLine}
+        ${dots}
+        ${xLabels}
+      </svg>
+      <div style="display:flex;gap:16px;margin-top:10px;font-size:12px;font-family:'DM Mono',monospace;color:#8c7b6e;flex-wrap:wrap">
+        <span><span style="display:inline-block;width:10px;height:10px;background:#3a8a5c;border-radius:2px;margin-right:5px;vertical-align:middle"></span>รายรับ</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#c23a3a;border-radius:2px;margin-right:5px;vertical-align:middle"></span>รายจ่าย</span>
+        <span><span style="display:inline-block;width:10px;height:3px;background:#8c7b6e;border-radius:2px;margin-right:5px;vertical-align:middle;margin-bottom:3px"></span>แนวโน้มกำไร</span>
+        <span style="margin-left:auto;color:#3a8a5c;font-weight:600">รวม: ${isProfit ? "กำไร" : "ขาดทุน"} ฿${fmt(Math.abs(p.totalProfit))}</span>
+      </div>`;
     }
 
     function go(p) { window.location.href = p; }
