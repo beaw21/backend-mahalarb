@@ -477,7 +477,12 @@
     <div class="modal">
       <div class="modal-title" id="modalTitle">เพิ่ม<em>เมนู</em></div>
       <div class="field"><label>ชื่อเมนู</label><input id="fName" placeholder="เช่น ข้าวผัดกุ้ง"></div>
-      <div class="field"><label>ราคา (฿)</label><input id="fPrice" type="number" placeholder="0"></div>
+      <div class="field"><label>ราคาขาย (฿)</label><input id="fPrice" type="number" placeholder="0" min="0"></div>
+      <div class="field"><label>ต้นทุนต่อจาน (฿)</label><input id="fCost" type="number" placeholder="0" min="0"
+          step="0.01">
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:4px">วัตถุดิบ + แก๊ส + อื่นๆ
+          โดยประมาณ</div>
+      </div>
       <div class="field"><label>หมวดหมู่</label><select id="fCat">
           <option value="">-- เลือกหมวดหมู่ --</option>
         </select></div>
@@ -513,8 +518,12 @@
         <div class="card-cat">${item.category_name || "—"}</div>
         <div class="card-name">${item.name}</div>
         <div class="card-price">${Number(item.price).toLocaleString()} <span>บาท</span></div>
+        ${item.cost > 0 ? `<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <span style="font-size:11px;font-family:var(--mono);background:rgba(194,103,58,.1);color:var(--accent);padding:3px 10px;border-radius:99px;border:1px solid rgba(194,103,58,.2)">ต้นทุน ฿${Number(item.cost).toLocaleString()}</span>
+          <span style="font-size:11px;font-family:var(--mono);background:${((item.price - item.cost) / item.price * 100) >= 40 ? 'rgba(58,138,92,.1)' : 'rgba(194,58,58,.1)'};color:${((item.price - item.cost) / item.price * 100) >= 40 ? 'var(--green)' : 'var(--red)'};padding:3px 10px;border-radius:99px;border:1px solid ${((item.price - item.cost) / item.price * 100) >= 40 ? 'rgba(58,138,92,.2)' : 'rgba(194,58,58,.2)'}">Margin ${Math.round((item.price - item.cost) / item.price * 100)}%</span>
+        </div>` : '<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:10px">ยังไม่มีต้นทุน</div>'}
         <div class="card-actions">
-          <button class="btn-edit" onclick='editMenu(${item.id},"${item.name}",${item.price},"${item.category_name}")'>✏️ แก้ไข</button>
+          <button class="btn-edit" onclick='editMenu(${item.id},"${item.name}",${item.price},${item.cost || 0},"${item.category_name}")'>✏️ แก้ไข</button>
           <button class="btn-del" onclick="deleteMenu(${item.id})">🗑 ลบ</button>
         </div>
       </div>`).join("");
@@ -523,8 +532,8 @@
       const cats = [...new Set(allData.map(i => i.category_name))];
       document.getElementById("fCat").innerHTML = `<option value="">-- เลือกหมวดหมู่ --</option>` + cats.map(c => `<option value="${c}">${c}</option>`).join("");
     }
-    function openForm() { editMode = false; editId = null; document.getElementById("modalTitle").innerHTML = 'เพิ่ม<em style="color:var(--accent);font-style:normal">เมนู</em>'; fillCat(); document.getElementById("fName").value = ""; document.getElementById("fPrice").value = ""; document.getElementById("fCat").value = ""; document.getElementById("overlay").classList.add("open"); }
-    function editMenu(id, name, price, cat) { editMode = true; editId = id; document.getElementById("modalTitle").innerHTML = 'แก้ไข<em style="color:var(--accent);font-style:normal">เมนู</em>'; fillCat(); document.getElementById("fName").value = name; document.getElementById("fPrice").value = price; document.getElementById("fCat").value = cat; document.getElementById("overlay").classList.add("open"); }
+    function openForm() { editMode = false; editId = null; document.getElementById("modalTitle").innerHTML = 'เพิ่ม<em style="color:var(--accent);font-style:normal">เมนู</em>'; fillCat(); document.getElementById("fName").value = ""; document.getElementById("fPrice").value = ""; document.getElementById("fCost").value = ""; document.getElementById("fCat").value = ""; document.getElementById("overlay").classList.add("open"); }
+    function editMenu(id, name, price, cost, cat) { editMode = true; editId = id; document.getElementById("modalTitle").innerHTML = 'แก้ไข<em style="color:var(--accent);font-style:normal">เมนู</em>'; fillCat(); document.getElementById("fName").value = name; document.getElementById("fPrice").value = price; document.getElementById("fCost").value = cost || 0; document.getElementById("fCat").value = cat; document.getElementById("overlay").classList.add("open"); }
     function closeForm() { document.getElementById("overlay").classList.remove("open"); }
     async function saveMenu() {
       const name = document.getElementById("fName").value.trim();

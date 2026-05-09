@@ -46,28 +46,21 @@ const supabase = createClient(
 const PORT = process.env.PORT || 3000;
 
 /////////////////////////////////////////
-// 🟢 GET MENU — sorted by price DESC
+// 🟢 GET MENU — sorted by price ASC
 /////////////////////////////////////////
 app.get("/menu", async (req, res) => {
   const { data, error } = await supabase
     .from("menu")
-    .select(
-      `
-      id,
-      name,
-      price,
-      category_id,
-      categories(name)
-    `,
-    )
-    .order("price", { ascending: false }); // FIX: sort by price descending
+    .select(`id, name, price, cost, category_id, categories(name)`)
+    .order("price", { ascending: true });
 
   if (error) return res.status(500).json(error);
 
   const formatted = data.map((item) => ({
     id: item.id,
     name: item.name,
-    price: item.price,
+    price: parseFloat(item.price),
+    cost: parseFloat(item.cost || 0),
     category_id: item.category_id,
     category_name: item.categories?.name,
   }));
@@ -79,7 +72,9 @@ app.get("/menu", async (req, res) => {
 // 🟢 ADD MENU
 /////////////////////////////////////////
 app.post("/menu", async (req, res) => {
-  const { name, price, category_name } = req.body;
+  const { name, category_name } = req.body;
+  const price = parseFloat(req.body.price);
+  const cost = parseFloat(req.body.cost || 0);
 
   const { data: category } = await supabase
     .from("categories")
@@ -91,10 +86,9 @@ app.post("/menu", async (req, res) => {
 
   const { error } = await supabase
     .from("menu")
-    .insert([{ name, price, category_id: category.id }]);
+    .insert([{ name, price, cost, category_id: category.id }]);
 
   if (error) return res.status(500).json(error);
-
   res.json({ message: "เพิ่มสำเร็จ" });
 });
 
@@ -123,7 +117,12 @@ app.put("/menu/:id", async (req, res) => {
 
   const { error } = await supabase
     .from("menu")
-    .update({ name, price, category_id: category.id })
+    .update({
+      name,
+      price,
+      cost: parseFloat(req.body.cost || 0),
+      category_id: category.id,
+    })
     .eq("id", id);
 
   if (error) {
@@ -752,6 +751,220 @@ app.get("/dashboard/profit", async (req, res) => {
       totalProfit,
       byCategory,
       chart: Object.values(dayMap),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/////////////////////////////////////////
+// 🟢 COST ANALYSIS
+// GET /dashboard/cost-analysis?period=day|week|month
+// ใช้ menu.cost (ต้นทุนรวม) + menu_costs (ingredient ละเอียด)
+/////////////////////////////////////////
+app.get("/dashboard/cost-analysis", async (req, res) => {
+  try {
+    const period = req.query.period || "month";
+    const { todayTH } = getTodayRangeUTC();
+    const [y, m] = todayTH.split("-").map(Number);
+
+    let startDate, endDate;
+    if (period === "day") {
+      startDate = endDate = todayTH;
+    } else if (period === "week") {
+      const d = new Date(todayTH);
+      d.setDate(d.getDate() - 6);
+      startDate = d.toISOString().slice(0, 10);
+      endDate = todayTH;
+    } else {
+      startDate = `${y}-${String(m).padStart(2, "0")}-01`;
+      endDate = todayTH;
+    }
+
+    // ── 1. เมนู + cost summary (menu.cost) ──────────────────────
+    const { data: menus, error: menuErr } = await supabase
+      .from("menu")
+      .select("id, name, price, cost, category_id, categories(name)")
+      .order("price", { ascending: true });
+    if (menuErr) throw menuErr;
+
+    // ── 2. ingredient ละเอียดจาก menu_costs ─────────────────────
+    const { data: menuCosts } = await supabase
+      .from("menu_costs")
+      .select("menu_id, item, amount, unit, cost");
+
+    // build map: menu_id → ingredients[]
+    const ingredientMap = {};
+    (menuCosts || []).forEach((mc) => {
+      if (!ingredientMap[mc.menu_id]) ingredientMap[mc.menu_id] = [];
+      ingredientMap[mc.menu_id].push({
+        item: mc.item,
+        amount: parseFloat(mc.amount || 0),
+        unit: mc.unit,
+        cost: parseFloat(mc.cost || 0),
+      });
+    });
+
+    // ── 3. ยอดขายในช่วงเวลา (paid orders) ──────────────────────
+    const { data: paidOrders } = await supabase
+      .from("orders")
+      .select("id")
+      .eq("payment_status", "success")
+      .gte("order_date", startDate)
+      .lte("order_date", endDate);
+
+    const orderIds = (paidOrders || []).map((o) => o.id);
+    const soldMap = {}; // menu_id → { qty, revenue }
+
+    if (orderIds.length > 0) {
+      const { data: items } = await supabase
+        .from("order_items")
+        .select("menu_id, quantity, unit_price")
+        .in("order_id", orderIds);
+
+      (items || []).forEach((i) => {
+        if (!soldMap[i.menu_id]) soldMap[i.menu_id] = { qty: 0, revenue: 0 };
+        soldMap[i.menu_id].qty += i.quantity;
+        soldMap[i.menu_id].revenue += i.quantity * parseFloat(i.unit_price);
+      });
+    }
+
+    // ── 4. คำนวณ per-menu metrics ────────────────────────────────
+    const menuAnalysis = menus.map((menu) => {
+      const price = parseFloat(menu.price);
+
+      // ถ้ามี ingredient ละเอียด ให้รวมจาก menu_costs.cost ก่อน
+      // ถ้าไม่มีให้ fallback ไปใช้ menu.cost
+      const ingredients = ingredientMap[menu.id] || [];
+      const costFromIngredients = ingredients.reduce(
+        (s, ing) => s + ing.cost,
+        0,
+      );
+      const cost =
+        costFromIngredients > 0
+          ? costFromIngredients
+          : parseFloat(menu.cost || 0);
+
+      const margin = price - cost;
+      const marginPct = price > 0 ? (margin / price) * 100 : 0;
+      const sold = soldMap[menu.id] || { qty: 0, revenue: 0 };
+      const totalCost = cost * sold.qty;
+      const profit = sold.revenue - totalCost;
+
+      // ── คำแนะนำอัตโนมัติ ──
+      let advice, adviceType;
+      if (cost === 0) {
+        advice = "ยังไม่มีต้นทุน กรุณากรอกใน menu_costs";
+        adviceType = "warn";
+      } else if (marginPct < 20) {
+        advice = "🔴 Margin ต่ำมาก — ควรขึ้นราคาหรือลดต้นทุน";
+        adviceType = "danger";
+      } else if (marginPct < 40) {
+        advice = "🟡 Margin ปานกลาง — พิจารณาลดต้นทุนวัตถุดิบ";
+        adviceType = "warn";
+      } else if (sold.qty >= 10 && marginPct >= 60) {
+        advice = "⭐ ขายดี + Margin สูง — Push การขายเพิ่ม";
+        adviceType = "star";
+      } else if (sold.qty === 0) {
+        advice = "ไม่มียอดขายในช่วงนี้";
+        adviceType = "info";
+      } else {
+        advice = "✅ Margin ดี";
+        adviceType = "ok";
+      }
+
+      // ingredient ที่แพงที่สุด (ควรพิจารณาลด)
+      const topIngredient =
+        ingredients.length > 0
+          ? ingredients.sort((a, b) => b.cost - a.cost)[0]
+          : null;
+
+      return {
+        id: menu.id,
+        name: menu.name,
+        category: menu.categories?.name || "อื่นๆ",
+        price,
+        cost,
+        margin,
+        marginPct: Math.round(marginPct * 10) / 10,
+        qty: sold.qty,
+        revenue: Math.round(sold.revenue * 100) / 100,
+        totalCost: Math.round(totalCost * 100) / 100,
+        profit: Math.round(profit * 100) / 100,
+        advice,
+        adviceType,
+        ingredients, // ingredient list สำหรับ expand ในหน้าเว็บ
+        topIngredient, // ingredient ที่ cost สูงสุด
+        hasCostDetail: ingredients.length > 0,
+      };
+    });
+
+    // ── 5. รายจ่ายจาก expenses table ────────────────────────────
+    const { data: rawExpenses } = await supabase
+      .from("expenses")
+      .select("amount, category")
+      .gte("expense_date", startDate)
+      .lte("expense_date", endDate);
+
+    const totalExpense = (rawExpenses || []).reduce(
+      (s, e) => s + parseFloat(e.amount),
+      0,
+    );
+    const ingredientExpense = (rawExpenses || [])
+      .filter((e) => e.category === "วัตถุดิบ")
+      .reduce((s, e) => s + parseFloat(e.amount), 0);
+    const totalRevenue = Object.values(soldMap).reduce(
+      (s, v) => s + v.revenue,
+      0,
+    );
+    const foodCostPct =
+      totalRevenue > 0 ? (ingredientExpense / totalRevenue) * 100 : 0;
+
+    // ── 6. สรุปต้นทุนที่ใช้จริงต่อ ingredient ──────────────────
+    // ถ้ามีข้อมูล qty ที่ขาย → คำนวณ ingredient ที่ใช้ไปทั้งหมด
+    const ingredientUsage = {};
+    menus.forEach((menu) => {
+      const sold = soldMap[menu.id];
+      if (!sold || sold.qty === 0) return;
+      (ingredientMap[menu.id] || []).forEach((ing) => {
+        if (!ingredientUsage[ing.item])
+          ingredientUsage[ing.item] = {
+            item: ing.item,
+            unit: ing.unit,
+            totalUsed: 0,
+            totalCost: 0,
+          };
+        ingredientUsage[ing.item].totalUsed += ing.amount * sold.qty;
+        ingredientUsage[ing.item].totalCost += ing.cost * sold.qty;
+      });
+    });
+    const ingredientUsageSorted = Object.values(ingredientUsage).sort(
+      (a, b) => b.totalCost - a.totalCost,
+    );
+
+    // expense by category
+    const expByCategory = {};
+    (rawExpenses || []).forEach((e) => {
+      const cat = e.category || "ทั่วไป";
+      if (!expByCategory[cat]) expByCategory[cat] = 0;
+      expByCategory[cat] += parseFloat(e.amount);
+    });
+    const expSorted = Object.entries(expByCategory)
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat, amt]) => ({ cat, amt }));
+
+    res.json({
+      period,
+      startDate,
+      endDate,
+      totalRevenue,
+      totalExpense,
+      ingredientExpense,
+      foodCostPct: Math.round(foodCostPct * 10) / 10,
+      expByCategory: expSorted,
+      ingredientUsage: ingredientUsageSorted, // วัตถุดิบที่ใช้ไปจริงในช่วงนี้
+      menuAnalysis: menuAnalysis.sort((a, b) => b.marginPct - a.marginPct),
     });
   } catch (err) {
     console.error(err);
