@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ต้นทุนเมนู · มหาลาภ</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f7f3ee;
+            --surface: #ffffff;
+            --s2: #fdf9f5;
+            --border: #e8dfd5;
+            --accent: #c2673a;
+            --green: #3a8a5c;
+            --red: #c23a3a;
+            --blue: #3a6fa8;
+            --yellow: #b8860b;
+            --text: #2c2118;
+            --muted: #8c7b6e;
+            --font: 'Noto Serif Thai', serif;
+            --mono: 'DM Mono', monospace;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+            background-size: 28px 28px;
+            opacity: .4;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* TOPBAR */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(247, 243, 238, .92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 0 32px;
+            height: 64px;
+        }
+
+        .back-btn {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+            padding: 7px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 600;
+            transition: all .2s;
+            flex-shrink: 0;
+        }
+
+        .back-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .page-title {
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .page-title em {
+            color: var(--accent);
+            font-style: normal;
+        }
+
+        /* LAYOUT */
+        .layout {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            min-height: calc(100vh - 64px);
+        }
+
+        /* LEFT — menu list */
+        .menu-sidebar {
+            border-right: 1px solid var(--border);
+            background: var(--s2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-head {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            font-family: var(--mono);
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-box {
+            margin: 12px 14px;
+            padding: 9px 14px;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: var(--font);
+            font-size: 14px;
+            color: var(--text);
+            outline: none;
+            width: calc(100% - 28px);
+            transition: border-color .2s;
+        }
+
+        .search-box:focus {
+            border-color: var(--accent);
+        }
+
+        .menu-list {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .menu-row {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: all .18s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .menu-row:hover {
+            background: rgba(194, 103, 58, .05);
+        }
+
+        .menu-row.active {
+            background: rgba(194, 103, 58, .1);
+            border-left: 3px solid var(--accent);
+        }
+
+        .menu-row-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .menu-row-name {
+            font-size: 14px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .menu-row-cat {
+            font-size: 11px;
+            color: var(--muted);
+            font-family: var(--mono);
+            margin-top: 2px;
+        }
+
+        .menu-row-right {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .menu-row-price {
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .margin-pill {
+            display: inline-block;
+            font-size: 10px;
+            font-family: var(--mono);
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 99px;
+            margin-top: 3px;
+        }
+
+        /* RIGHT — cost editor */
+        .cost-panel {
+            padding: 28px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Menu header card */
+        .menu-header-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 18px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .mhc-name {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .mhc-cat {
+            font-size: 12px;
+            color: var(--muted);
+            font-family: var(--mono);
+            margin-top: 3px;
+        }
+
+        .mhc-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-left: auto;
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            font-family: var(--mono);
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            font-family: var(--mono);
+            margin-top: 4px;
+        }
+
+        .stat-value.price {
+            color: var(--accent);
+        }
+
+        .stat-value.cost {
+            color: var(--red);
+        }
+
+        .stat-value.margin {}
+
+        .margin-bar-wrap {
+            margin-top: 8px;
+            flex-basis: 100%;
+        }
+
+        .margin-bar {
+            height: 8px;
+            border-radius: 99px;
+            background: var(--border);
+            overflow: hidden;
+        }
+
+        .margin-bar-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width .6s cubic-bezier(.16, 1, .3, 1);
+        }
+
+        .margin-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-family: var(--mono);
+            color: var(--muted);
+            margin-top: 5px;
+        }
+
+        /* Ingredient table */
+        .ing-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 18px;
+            overflow: hidden;
+        }
+
+        .ing-card-head {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .ing-card-title {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .add-ing-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--green);
+            border: none;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(58, 138, 92, .25);
+            transition: all .2s;
+        }
+
+        .add-ing-btn:hover {
+            background: #2e7049;
+            transform: translateY(-1px);
+        }
+
+        /* inline add form */
+        .add-row {
+            display: grid;
+            grid-template-columns: 1fr 90px 80px 90px auto;
+            gap: 8px;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(58, 138, 92, .04);
+            animation: slideIn .2s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .add-row input,
+        .add-row select {
+            padding: 9px 12px;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: var(--font);
+            font-size: 13px;
+            color: var(--text);
+            outline: none;
+            transition: border-color .2s;
+            width: 100%;
+        }
+
+        .add-row input:focus,
+        .add-row select:focus {
+            border-color: var(--green);
+        }
+
+        .save-ing-btn {
+            background: var(--green);
+            border: none;
+            color: #fff;
+            padding: 9px 14px;
+            border-radius: 10px;
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .cancel-ing-btn {
+            background: var(--s2);
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+            padding: 9px 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-left: 4px;
+        }
+
+        /* ingredient rows */
+        .ing-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ing-table thead tr {
+            border-bottom: 1.5px solid var(--border);
+            background: var(--s2);
+        }
+
+        .ing-table th {
+            text-align: left;
+            padding: 10px 18px;
+            font-size: 10px;
+            font-family: var(--mono);
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            font-weight: 500;
+        }
+
+        .ing-table th:last-child {
+            text-align: right;
+        }
+
+        .ing-table td {
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .ing-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .ing-table tr:hover td {
+            background: rgba(247, 243, 238, .6);
+        }
+
+        .ing-name {
+            font-weight: 700;
+        }
+
+        .ing-amount {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .ing-cost {
+            font-family: var(--mono);
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--red);
+            text-align: right;
+        }
+
+        .ing-pct {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--muted);
+            text-align: right;
+        }
+
+        /* edit inline */
+        .ing-edit-row td {
+            background: rgba(58, 138, 92, .04) !important;
+            padding: 8px 10px !important;
+        }
+
+        .ing-edit-row input {
+            padding: 7px 10px;
+            width: 100%;
+            background: var(--surface);
+            border: 1.5px solid var(--green);
+            border-radius: 8px;
+            font-family: var(--font);
+            font-size: 13px;
+            color: var(--text);
+            outline: none;
+        }
+
+        .ing-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: var(--font);
+            cursor: pointer;
+            border: none;
+            transition: all .18s;
+        }
+
+        .btn-edit-sm {
+            background: var(--s2);
+            border: 1.5px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-edit-sm:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-del-sm {
+            background: rgba(194, 58, 58, .08);
+            color: var(--red);
+            border: 1.5px solid rgba(194, 58, 58, .2);
+        }
+
+        .btn-del-sm:hover {
+            background: rgba(194, 58, 58, .16);
+        }
+
+        .btn-save-sm {
+            background: var(--green);
+            color: #fff;
+        }
+
+        .btn-cancel-sm {
+            background: var(--s2);
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+        }
+
+        /* total row */
+        .ing-total-row td {
+            padding: 14px 18px !important;
+            border-top: 2px solid var(--border) !important;
+            font-weight: 800;
+            font-family: var(--mono);
+            background: var(--s2) !important;
+        }
+
+        /* empty state */
+        .empty-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 80px;
+            color: var(--muted);
+            text-align: center;
+            gap: 12px;
+        }
+
+        .empty-ico {
+            font-size: 52px;
+        }
+
+        .empty-text {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .empty-sub {
+            font-size: 13px;
+        }
+
+        .empty-ing {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        /* PRICE RECOMMENDATION CARD */
+        .rec-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 18px;
+            overflow: hidden;
+        }
+
+        .rec-card-head {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .rec-card-title {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .rec-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* target margin selector */
+        .target-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .target-label {
+            font-size: 13px;
+            color: var(--muted);
+            font-family: var(--mono);
+            flex-shrink: 0;
+        }
+
+        .target-pills {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .target-pill {
+            padding: 5px 14px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-family: var(--mono);
+            font-weight: 700;
+            border: 1.5px solid var(--border);
+            background: var(--s2);
+            color: var(--muted);
+            cursor: pointer;
+            transition: all .18s;
+        }
+
+        .target-pill.active {
+            border-color: var(--accent);
+            background: rgba(194, 103, 58, .1);
+            color: var(--accent);
+        }
+
+        .target-pill:hover:not(.active) {
+            border-color: var(--muted);
+            color: var(--text);
+        }
+
+        .target-custom {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .target-custom input {
+            width: 64px;
+            padding: 5px 10px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border);
+            background: var(--s2);
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--text);
+            outline: none;
+            text-align: center;
+            transition: border-color .2s;
+        }
+
+        .target-custom input:focus {
+            border-color: var(--accent);
+            background: #fff;
+        }
+
+        /* recommendation grid */
+        .rec-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .rec-box {
+            border-radius: 14px;
+            padding: 14px 16px;
+            border: 1.5px solid;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rec-box-label {
+            font-size: 10px;
+            font-family: var(--mono);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 8px;
+            opacity: .7;
+        }
+
+        .rec-box-value {
+            font-size: 22px;
+            font-weight: 800;
+            font-family: var(--mono);
+            line-height: 1;
+        }
+
+        .rec-box-sub {
+            font-size: 11px;
+            font-family: var(--mono);
+            margin-top: 5px;
+            opacity: .65;
+        }
+
+        /* insight banner */
+        .insight-banner {
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 13px;
+            line-height: 1.7;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .insight-ico {
+            font-size: 18px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .insight-text {
+            flex: 1;
+        }
+
+        .insight-text strong {
+            font-weight: 700;
+        }
+
+        /* cost breakdown donut (SVG) */
+        .donut-wrap {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .donut-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .donut-legend-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-family: var(--mono);
+        }
+
+        .donut-legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        @media(max-width:700px) {
+            .rec-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .donut-wrap {
+                flex-direction: column;
+            }
+        }
+
+        @media(max-width:800px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .menu-sidebar {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                max-height: 280px;
+            }
+
+            .cost-panel {
+                padding: 16px;
+            }
+        }
+
+        @media(max-width:600px) {
+            .topbar {
+                padding: 0 16px;
+            }
+
+            .add-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar">
+        <button class="back-btn" onclick="go('index.html')">← หน้าหลัก</button>
+        <div class="page-title">🧮 จัดการ<em>ต้นทุนเมนู</em></div>
+    </div>
+
+    <div class="layout">
+        <!-- LEFT: menu selector -->
+        <div class="menu-sidebar">
+            <div class="sidebar-head">
+                <span>เมนูทั้งหมด</span>
+                <span id="menuCount" style="font-size:12px">—</span>
+            </div>
+            <input class="search-box" id="searchBox" placeholder="🔍 ค้นหาเมนู..." oninput="filterMenus()">
+            <div class="menu-list" id="menuList">
+                <div style="text-align:center;padding:40px;color:var(--muted);font-size:13px">กำลังโหลด...</div>
+            </div>
+        </div>
+
+        <!-- RIGHT: cost editor -->
+        <div class="cost-panel" id="costPanel">
+            <div class="empty-panel">
+                <div class="empty-ico">🧮</div>
+                <div class="empty-text">เลือกเมนูที่ต้องการจัดการต้นทุน</div>
+                <div class="empty-sub">คลิกเมนูทางซ้ายเพื่อเริ่มต้น</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // const API = "https://backend-mahalarb.onrender.com";
+        const API = "http://localhost:3000";
+        let allMenus = [], selectedMenuId = null, showAddRow = false, editingId = null;
+
+        // ── LOAD ALL MENUS ────────────────────────────────────
+        async function loadMenus() {
+            const res = await fetch(`${API}/menu`);
+            allMenus = await res.json();
+            document.getElementById("menuCount").textContent = allMenus.length + " เมนู";
+            renderMenuList(allMenus);
+        }
+
+        function filterMenus() {
+            const q = document.getElementById("searchBox").value.toLowerCase();
+            renderMenuList(allMenus.filter(m => m.name.toLowerCase().includes(q) || (m.category_name || "").toLowerCase().includes(q)));
+        }
+
+        function marginColor(pct) {
+            if (pct >= 60) return "#3a8a5c";
+            if (pct >= 40) return "#b8860b";
+            return "#c23a3a";
+        }
+        function marginLabel(pct) {
+            if (pct >= 60) return "✅ ดี";
+            if (pct >= 40) return "🟡 พอได้";
+            if (pct > 0) return "🔴 ต่ำ";
+            return "—";
+        }
+
+        function renderMenuList(menus) {
+            if (!menus.length) {
+                document.getElementById("menuList").innerHTML = `<div class="empty-ing">ไม่พบเมนู</div>`;
+                return;
+            }
+            document.getElementById("menuList").innerHTML = menus.map(m => {
+                const price = parseFloat(m.price);
+                const cost = parseFloat(m.cost || 0);
+                const pct = price > 0 && cost > 0 ? Math.round(((price - cost) / price) * 100) : null;
+                const col = pct !== null ? marginColor(pct) : "var(--muted)";
+                return `
+    <div class="menu-row ${selectedMenuId === m.id ? 'active' : ''}" onclick="selectMenu(${m.id})">
+      <div class="menu-row-info">
+        <div class="menu-row-name">${m.name}</div>
+        <div class="menu-row-cat">${m.category_name || "—"}</div>
+      </div>
+      <div class="menu-row-right">
+        <div class="menu-row-price">฿${Number(m.price).toLocaleString()}</div>
+        <span class="margin-pill" style="background:${col}22;color:${col};border:1px solid ${col}44">
+          ${pct !== null ? "Margin " + pct + "%" : "ไม่มีต้นทุน"}
+        </span>
+      </div>
+    </div>`;
+            }).join("");
+        }
+
+        // ── SELECT MENU → LOAD INGREDIENTS ───────────────────
+        async function selectMenu(id) {
+            selectedMenuId = id;
+            showAddRow = false; editingId = null;
+            renderMenuList(allMenus.filter(m => {
+                const q = document.getElementById("searchBox").value.toLowerCase();
+                return !q || m.name.toLowerCase().includes(q) || (m.category_name || "").toLowerCase().includes(q);
+            }));
+            document.getElementById("costPanel").innerHTML = `<div style="text-align:center;padding:60px;color:var(--muted)">กำลังโหลด...</div>`;
+            await loadIngredients();
+        }
+
+        async function loadIngredients() {
+            if (!selectedMenuId) return;
+            const res = await fetch(`${API}/menu-costs/${selectedMenuId}`);
+            const data = await res.json();
+            if (!res.ok) { toast(data.error || "โหลดไม่ได้", false); return; }
+            renderCostPanel(data);
+
+            // sync menu list margin display
+            const m = allMenus.find(x => x.id === selectedMenuId);
+            if (m) { m.cost = data.totalCost; renderMenuList(allMenus); }
+        }
+
+        // ── RENDER COST PANEL ─────────────────────────────────
+        function renderCostPanel(data) {
+            const { menu, ingredients, totalCost } = data;
+            const price = parseFloat(menu.price);
+            const margin = price - totalCost;
+            const marginPct = price > 0 ? Math.round(((price - totalCost) / price) * 100) : 0;
+            const mColor = marginColor(marginPct);
+            const mLabel = marginLabel(marginPct);
+
+            // ── Price recommendation logic ────────────────────────
+            // target margin tiers used by recommendation card
+            const targets = [30, 40, 50, 60];
+            function priceForMargin(tgt) {
+                // price = cost / (1 - target/100)
+                if (totalCost <= 0) return null;
+                return Math.ceil(totalCost / (1 - tgt / 100));
+            }
+            // top cost driver
+            const topIng = ingredients.length > 0
+                ? [...ingredients].sort((a, b) => b.cost - a.cost)[0]
+                : null;
+            const topIngPct = topIng && totalCost > 0 ? Math.round((topIng.cost / totalCost) * 100) : 0;
+
+            // ── Build insight text ────────────────────────────────
+            function buildInsight() {
+                if (totalCost <= 0) return { ico: "💡", bg: "rgba(140,123,110,.08)", border: "rgba(140,123,110,.2)", color: "var(--muted)", text: "กรอกต้นทุน ingredient ก่อน ระบบจะคำนวณราคาแนะนำให้อัตโนมัติ" };
+                if (marginPct >= 60) return { ico: "⭐", bg: "rgba(58,138,92,.08)", border: "rgba(58,138,92,.25)", color: "#3a8a5c", text: `<strong>Margin ดีเยี่ยม ${marginPct}%</strong> — ราคาปัจจุบัน ฿${price} อยู่ในระดับที่ดีมาก พิจารณา push การขายเมนูนี้เพิ่ม` };
+                if (marginPct >= 40) return { ico: "🟡", bg: "rgba(184,134,11,.07)", border: "rgba(184,134,11,.25)", color: "#b8860b", text: `<strong>Margin ${marginPct}% — พอรับได้</strong> แต่ยังต่ำกว่า 60% หากต้องการ margin 60% ควรตั้งราคา <strong>฿${priceForMargin(60)}</strong> หรือลดต้นทุนลง ฿${(totalCost - price * 0.4).toFixed(2)}` };
+                if (price > 0) return { ico: "🔴", bg: "rgba(194,58,58,.07)", border: "rgba(194,58,58,.25)", color: "#c23a3a", text: `<strong>Margin ต่ำมาก ${marginPct}%</strong> — ราคาปัจจุบัน ฿${price} ต่ำกว่าที่ควรจะเป็น ควรขึ้นราคาเป็น <strong>฿${priceForMargin(50)}</strong> (margin 50%) หรืออย่างน้อย ฿${priceForMargin(40)} (margin 40%)` };
+                return { ico: "💡", bg: "rgba(140,123,110,.08)", border: "rgba(140,123,110,.2)", color: "var(--muted)", text: "ตั้งราคาขายในหน้าเมนูก่อนเพื่อให้ระบบคำนวณ margin ได้" };
+            }
+            const insight = buildInsight();
+
+            // ── Donut chart SVG ───────────────────────────────────
+            function buildDonut() {
+                if (totalCost <= 0 || price <= 0) return "";
+                const costPct = Math.min(Math.round((totalCost / price) * 100), 100);
+                const profitPct = 100 - costPct;
+                const r = 44, cx = 54, cy = 54, stroke = 14;
+                const circ = 2 * Math.PI * r;
+                const costDash = (costPct / 100) * circ;
+                const profitDash = (profitPct / 100) * circ;
+                // start from top (-90deg = -PI/2)
+                const profitOffset = circ * 0.25;
+                const costOffset = profitOffset - profitDash;
+                return `
+    <div class="donut-wrap">
+      <svg width="108" height="108" viewBox="0 0 108 108">
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border)" stroke-width="${stroke}"/>
+        <!-- profit arc (green) -->
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#3a8a5c" stroke-width="${stroke}"
+          stroke-dasharray="${profitDash} ${circ - profitDash}"
+          stroke-dashoffset="${profitOffset}"
+          stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})"/>
+        <!-- cost arc (red) -->
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#c23a3a" stroke-width="${stroke}"
+          stroke-dasharray="${costDash} ${circ - costDash}"
+          stroke-dashoffset="${costOffset}"
+          stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})"/>
+        <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-size="13" font-family="DM Mono,monospace" font-weight="700" fill="${mColor}">${marginPct}%</text>
+        <text x="${cx}" y="${cy + 10}" text-anchor="middle" font-size="9" font-family="DM Mono,monospace" fill="var(--muted)">MARGIN</text>
+      </svg>
+      <div class="donut-legend">
+        <div class="donut-legend-row"><span class="donut-legend-dot" style="background:#3a8a5c"></span><span>กำไร ${profitPct}% = ฿${margin.toFixed(2)}</span></div>
+        <div class="donut-legend-row"><span class="donut-legend-dot" style="background:#c23a3a"></span><span>ต้นทุน ${costPct}% = ฿${totalCost.toFixed(2)}</span></div>
+        ${topIng ? `<div class="donut-legend-row" style="margin-top:4px;padding-top:8px;border-top:1px solid var(--border)"><span class="donut-legend-dot" style="background:var(--accent)"></span><span>สูงสุด: ${topIng.item} (${topIngPct}%)</span></div>` : ""}
+      </div>
+    </div>`;
+            }
+
+            // build add row HTML
+            const addRowHTML = showAddRow ? `
+    <tr class="add-row-tr"><td colspan="5" style="padding:0">
+      <div class="add-row">
+        <input id="nItem"   placeholder="ชื่อวัตถุดิบ เช่น หมูสับ">
+        <input id="nAmount" type="number" placeholder="ปริมาณ" min="0" step="0.01">
+        <select id="nUnit">
+          <option value="กรัม">กรัม</option>
+          <option value="กิโลกรัม">กิโลกรัม</option>
+          <option value="ml">ml</option>
+          <option value="ลิตร">ลิตร</option>
+          <option value="ชิ้น">ชิ้น</option>
+          <option value="ฟอง">ฟอง</option>
+          <option value="ช้อนโต๊ะ">ช้อนโต๊ะ</option>
+          <option value="ช้อนชา">ช้อนชา</option>
+          <option value="ถุง">ถุง</option>
+        </select>
+        <input id="nCost"   type="number" placeholder="ต้นทุน (฿)" min="0" step="0.01">
+        <div style="display:flex;gap:4px">
+          <button class="save-ing-btn"   onclick="saveNewIngredient()">✓ บันทึก</button>
+          <button class="cancel-ing-btn" onclick="cancelAdd()">✕</button>
+        </div>
+      </div>
+    </td></tr>` : "";
+
+            // build ingredient rows
+            const ingRows = ingredients.length === 0 ? `
+    <tr><td colspan="5" class="empty-ing">ยังไม่มี ingredient — กด "เพิ่ม" เพื่อเริ่ม</td></tr>
+  ` : ingredients.map(ing => {
+                const ingCostPct = totalCost > 0 ? Math.round((ing.cost / totalCost) * 100) : 0;
+                if (editingId === ing.id) {
+                    return `
+      <tr class="ing-edit-row" id="edit-row-${ing.id}">
+        <td><input id="eItem-${ing.id}"   value="${ing.item}"></td>
+        <td style="display:flex;gap:6px">
+          <input id="eAmount-${ing.id}" type="number" value="${ing.amount}" style="width:80px">
+          <select id="eUnit-${ing.id}" style="padding:7px 8px;background:var(--surface);border:1.5px solid var(--green);border-radius:8px;font-family:var(--font);font-size:12px;outline:none">
+            ${["กรัม", "กิโลกรัม", "ml", "ลิตร", "ชิ้น", "ฟอง", "ช้อนโต๊ะ", "ช้อนชา", "ถุง"].map(u => `<option ${u === ing.unit ? "selected" : ""}>${u}</option>`).join("")}
+          </select>
+        </td>
+        <td><input id="eCost-${ing.id}" type="number" value="${ing.cost}" style="width:90px"></td>
+        <td></td>
+        <td>
+          <div class="ing-actions">
+            <button class="btn-sm btn-save-sm"   onclick="saveEdit(${ing.id})">✓ บันทึก</button>
+            <button class="btn-sm btn-cancel-sm" onclick="cancelEdit()">ยกเลิก</button>
+          </div>
+        </td>
+      </tr>`;
+                }
+                return `
+    <tr>
+      <td><div class="ing-name">${ing.item}</div></td>
+      <td><span class="ing-amount">${ing.amount > 0 ? ing.amount + " " + (ing.unit || "") : "—"}</span></td>
+      <td class="ing-cost">฿${Number(ing.cost).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+      <td class="ing-pct">
+        <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+          <div style="width:40px;height:4px;background:var(--border);border-radius:99px;overflow:hidden">
+            <div style="height:100%;width:${ingCostPct}%;background:var(--red);border-radius:99px"></div>
+          </div>
+          <span>${ingCostPct}%</span>
+        </div>
+      </td>
+      <td>
+        <div class="ing-actions">
+          <button class="btn-sm btn-edit-sm" onclick="startEdit(${ing.id})">✏️</button>
+          <button class="btn-sm btn-del-sm"  onclick="deleteIngredient(${ing.id})">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+            }).join("");
+
+            document.getElementById("costPanel").innerHTML = `
+    <!-- Menu header -->
+    <div class="menu-header-card">
+      <div>
+        <div class="mhc-name">${menu.name}</div>
+        <div class="mhc-cat">${menu.categories?.name || "—"}</div>
+      </div>
+      <div class="mhc-stats">
+        <div class="stat-box">
+          <div class="stat-label">ราคาขาย</div>
+          <div class="stat-value price">฿${Number(price).toLocaleString()}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">ต้นทุนรวม</div>
+          <div class="stat-value cost">฿${Number(totalCost).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">กำไร/จาน</div>
+          <div class="stat-value margin" style="color:${mColor}">฿${Number(margin).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Margin</div>
+          <div class="stat-value margin" style="color:${mColor}">${marginPct}%</div>
+          <div style="font-size:11px;font-family:var(--mono);color:${mColor};margin-top:2px">${mLabel}</div>
+        </div>
+      </div>
+      <div class="margin-bar-wrap">
+        <div class="margin-bar">
+          <div class="margin-bar-fill" style="width:${Math.min(marginPct, 100)}%;background:${mColor}"></div>
+        </div>
+        <div class="margin-labels">
+          <span>ต้นทุน ${100 - marginPct}%</span>
+          <span style="color:${mColor}">กำไร ${marginPct}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ PRICE RECOMMENDATION CARD -->
+    <div class="rec-card">
+      <div class="rec-card-head">
+        <span class="rec-card-title">💡 คำแนะนำราคา & วิเคราะห์ต้นทุน</span>
+        <span style="font-size:11px;font-family:var(--mono);color:var(--muted)">ต้นทุนปัจจุบัน ฿${totalCost.toFixed(2)}/จาน</span>
+      </div>
+      <div class="rec-body">
+
+        <!-- insight banner -->
+        <div class="insight-banner" style="background:${insight.bg};border:1.5px solid ${insight.border};color:${insight.color}">
+          <span class="insight-ico">${insight.ico}</span>
+          <span class="insight-text">${insight.text}</span>
+        </div>
+
+        ${totalCost > 0 ? `
+        <!-- donut + target price grid -->
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start;flex-wrap:wrap">
+          ${buildDonut()}
+          <div>
+            <!-- target margin selector -->
+            <div class="target-row" style="margin-bottom:14px">
+              <span class="target-label">เป้า Margin:</span>
+              <div class="target-pills" id="targetPills">
+                ${targets.map(t => `<button class="target-pill ${t === 50 ? 'active' : ''}" onclick="setTarget(${t})">${t}%</button>`).join("")}
+              </div>
+              <div class="target-custom">
+                <input type="number" id="customTarget" placeholder="?" min="1" max="99" onchange="setTarget(parseInt(this.value))">
+                <span style="font-size:11px;font-family:var(--mono);color:var(--muted)">%</span>
+              </div>
+            </div>
+
+            <!-- recommendation boxes -->
+            <div class="rec-grid" id="recGrid">
+              ${buildRecGrid(50, price, totalCost)}
+            </div>
+          </div>
+        </div>
+
+        <!-- top ingredient note -->
+        ${topIng ? `
+        <div style="padding:12px 16px;border-radius:10px;background:rgba(194,103,58,.06);border:1.5px solid rgba(194,103,58,.15);font-size:13px;color:var(--text)">
+          🥬 <strong>${topIng.item}</strong> คิดเป็น <strong style="color:var(--accent)">${topIngPct}%</strong> ของต้นทุนทั้งหมด (฿${topIng.cost.toFixed(2)}/จาน)
+          ${topIngPct >= 50 ? " — <span style='color:#b8860b'>ลองหาวัตถุดิบทดแทนหรือต่อรองราคาซัพพลายเออร์</span>" : ""}
+        </div>` : ""}
+        ` : ""}
+      </div>
+    </div>
+
+    <!-- Ingredient table -->
+    <div class="ing-card">
+      <div class="ing-card-head">
+        <span class="ing-card-title">🥬 รายการวัตถุดิบ (${ingredients.length} รายการ)</span>
+        <button class="add-ing-btn" onclick="toggleAddRow()">+ เพิ่มวัตถุดิบ</button>
+      </div>
+      <table class="ing-table">
+        <thead>
+          <tr>
+            <th>วัตถุดิบ</th>
+            <th>ปริมาณ / หน่วย</th>
+            <th>ต้นทุน (฿)</th>
+            <th style="text-align:right">สัดส่วน</th>
+            <th style="text-align:right">จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${addRowHTML}
+          ${ingRows}
+          ${ingredients.length > 0 ? `
+          <tr class="ing-total-row">
+            <td>รวมทั้งหมด</td>
+            <td></td>
+            <td style="color:var(--red)">฿${Number(totalCost).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+            <td>100%</td>
+            <td></td>
+          </tr>` : ""}
+        </tbody>
+      </table>
+    </div>`;
+        }
+
+        // ── ADD INGREDIENT ────────────────────────────────────
+        function toggleAddRow() {
+            showAddRow = true; editingId = null;
+            loadIngredients();
+            setTimeout(() => document.getElementById("nItem")?.focus(), 100);
+        }
+        function cancelAdd() { showAddRow = false; loadIngredients(); }
+
+        async function saveNewIngredient() {
+            const item = document.getElementById("nItem")?.value.trim();
+            const amount = parseFloat(document.getElementById("nAmount")?.value || 0);
+            const unit = document.getElementById("nUnit")?.value;
+            const cost = parseFloat(document.getElementById("nCost")?.value || 0);
+            if (!item) return toast("กรอกชื่อวัตถุดิบด้วย", false);
+            try {
+                const res = await fetch(`${API}/menu-costs`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ menu_id: selectedMenuId, item, amount, unit, cost })
+                });
+                const d = await res.json();
+                if (!res.ok) return toast(d.error || "เพิ่มไม่สำเร็จ", false);
+                showAddRow = false;
+                toast("เพิ่มสำเร็จ ✓", true);
+                loadIngredients(); loadMenus();
+            } catch (e) { toast("เชื่อมต่อไม่ได้", false); }
+        }
+
+        // ── EDIT INGREDIENT ───────────────────────────────────
+        function startEdit(id) { editingId = id; showAddRow = false; loadIngredients(); }
+        function cancelEdit() { editingId = null; loadIngredients(); }
+
+        async function saveEdit(id) {
+            const item = document.getElementById(`eItem-${id}`)?.value.trim();
+            const amount = parseFloat(document.getElementById(`eAmount-${id}`)?.value || 0);
+            const unit = document.getElementById(`eUnit-${id}`)?.value;
+            const cost = parseFloat(document.getElementById(`eCost-${id}`)?.value || 0);
+            if (!item) return toast("กรอกชื่อวัตถุดิบด้วย", false);
+            try {
+                const res = await fetch(`${API}/menu-costs/${id}`, {
+                    method: "PUT", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ item, amount, unit, cost })
+                });
+                const d = await res.json();
+                if (!res.ok) return toast(d.error || "แก้ไขไม่สำเร็จ", false);
+                editingId = null;
+                toast("แก้ไขสำเร็จ ✓", true);
+                loadIngredients(); loadMenus();
+            } catch (e) { toast("เชื่อมต่อไม่ได้", false); }
+        }
+
+        // ── DELETE INGREDIENT ─────────────────────────────────
+        async function deleteIngredient(id) {
+            if (!confirm("ต้องการลบวัตถุดิบนี้?")) return;
+            try {
+                const res = await fetch(`${API}/menu-costs/${id}`, { method: "DELETE" });
+                const d = await res.json();
+                if (!res.ok) return toast(d.error || "ลบไม่สำเร็จ", false);
+                toast("ลบสำเร็จ 🗑", true);
+                loadIngredients(); loadMenus();
+            } catch (e) { toast("เชื่อมต่อไม่ได้", false); }
+        }
+
+        // ── UTILS ─────────────────────────────────────────────
+        function toast(msg, ok) {
+            const el = document.getElementById("toast");
+            el.textContent = msg;
+            el.className = `toast show ${ok ? 'ok' : 'err'}`;
+            setTimeout(() => el.classList.remove("show"), 2500);
+        }
+        function go(p) { window.location.href = p; }
+
+        loadMenus();
+    </script>
+</body>
+
+</html>

@@ -607,10 +607,20 @@
       <button class="back-btn" onclick="go('index.html')">← หน้าหลัก</button>
       <div class="page-title">📊 ภาพรวม<em>ร้าน</em></div>
     </div>
-    <div class="period-tabs">
-      <button class="tab active" data-p="day" onclick="setPeriod('day')">วันนี้</button>
-      <button class="tab" data-p="week" onclick="setPeriod('week')">สัปดาห์</button>
-      <button class="tab" data-p="month" onclick="setPeriod('month')">เดือนนี้</button>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="period-tabs">
+        <button class="tab active" data-p="day" onclick="setPeriod('day')">วันนี้</button>
+        <button class="tab" data-p="week" onclick="setPeriod('week')">สัปดาห์</button>
+        <button class="tab" data-p="month" onclick="setPeriod('month')">เดือนนี้</button>
+        <button class="tab" data-p="history" onclick="setPeriod('history')">📅 ประวัติ</button>
+      </div>
+      <!-- month picker: shown only when period=month -->
+      <div id="monthPickerWrap" style="display:none;align-items:center;gap:6px">
+        <input type="month" id="monthPicker"
+          style="padding:6px 12px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);font-family:var(--font);font-size:13px;color:var(--text);outline:none;cursor:pointer"
+          onchange="loadAll()">
+        <span style="font-size:11px;font-family:var(--mono);color:var(--muted)">เลือกเดือน</span>
+      </div>
     </div>
   </div>
 
@@ -724,11 +734,41 @@
   <script>
     const API = "https://backend-mahalarb.onrender.com";
     let period = "day";
-    const PTH = { day: "วันนี้", week: "7 วันย้อนหลัง", month: "เดือนนี้" };
+    const PTH = { day: "วันนี้", week: "7 วันย้อนหลัง", month: "เดือนที่เลือก", history: "12 เดือนย้อนหลัง" };
+    function getPTH(period, startDate) {
+      if (period === "month" && startDate) {
+        const thM = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+        const [y, mo] = startDate.split("-").map(Number);
+        return thM[mo - 1] + (y + 543);
+      }
+      return PTH[period] || period;
+    }
 
-    function setPeriod(p) { period = p; document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.p === p)); loadAll(); }
+    function setPeriod(p) {
+      period = p;
+      document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.p === p));
+      // show month picker only when period=month
+      const pickerWrap = document.getElementById("monthPickerWrap");
+      pickerWrap.style.display = (p === "month") ? "flex" : "none";
+      // default month picker to current month
+      if (p === "month" && !document.getElementById("monthPicker").value) {
+        const now = new Date();
+        document.getElementById("monthPicker").value =
+          `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      }
+      loadAll();
+    }
     function fmt(n) { return Number(n).toLocaleString("th-TH", { maximumFractionDigits: 0 }); }
-    function fmtLbl(s) { if (period === "day") return s; const [, m, d] = s.split("-"); return `${+d}/${+m}`; }
+    function fmtLbl(s) {
+      if (period === "day") return s;
+      if (period === "history") {
+        // YYYY-MM → Mon'YY e.g. "ม.ค.68"
+        const [y, mo] = s.split("-").map(Number);
+        const thMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+        return thMonths[mo - 1] + String(y + 543).slice(2);
+      }
+      const [, m, d] = s.split("-"); return `${+d}/${+m}`;
+    }
 
     function renderKPI(s) {
       document.getElementById("kRev").textContent = fmt(s.totalRevenue);
@@ -747,11 +787,19 @@
       document.getElementById("sLcash").textContent = `เงินสด ฿${fmt(s.cashRevenue)}`;
       document.getElementById("sLqr").textContent = `QR ฿${fmt(s.qrRevenue)}`;
       const [sd, ed] = [s.startDate, s.endDate];
-      document.getElementById("pLabel").innerHTML = `ช่วงเวลา: <em>${sd}${sd !== ed ? ' → ' + ed : ''}</em>`;
+      const thMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+      let pLabelText = `${sd}${sd !== ed ? ' → ' + ed : ''}`;
+      if (s.period === "month" && sd.length >= 7) {
+        const [y, mo] = sd.split("-").map(Number);
+        pLabelText = `${thMonths[mo - 1]} พ.ศ. ${y + 543}`;
+      } else if (s.period === "history") {
+        pLabelText = "12 เดือนย้อนหลัง";
+      }
+      document.getElementById("pLabel").innerHTML = `ช่วงเวลา: <em>${pLabelText}</em>`;
     }
 
     function renderChart(s) {
-      const badge = s.period === "day" ? "รายชั่วโมง" : s.period === "week" ? "รายวัน 7 วัน" : "รายวัน (เดือนนี้)";
+      const badge = s.period === "day" ? "รายชั่วโมง" : s.period === "week" ? "รายวัน (7 วัน)" : s.period === "history" ? "รายเดือน (12 เดือน)" : `รายวัน (${getPTH(s.period, s.startDate)})`;
       document.getElementById("chartBadge").textContent = badge;
       if (!s.chart || !s.chart.length) { document.getElementById("chartArea").innerHTML = `<div class="chart-empty">ไม่มีข้อมูล</div>`; return; }
       const maxR = Math.max(...s.chart.map(b => b.revenue), 1);
@@ -772,7 +820,7 @@
     }
 
     function renderMenu(d) {
-      const badge = PTH[d.period];
+      const badge = getPTH(d.period, d.startDate);
       document.getElementById("menuBadge").textContent = badge;
       if (!d.items || !d.items.length) { document.getElementById("menuArea").innerHTML = `<div class="loading">ไม่มีข้อมูล</div>`; return; }
       const maxQ = d.items[0].qty || 1;
@@ -796,10 +844,13 @@
       document.getElementById("menuArea").innerHTML = L;
       document.getElementById("profitChart").innerHTML = L;
       try {
+        // Build query string — add &month=YYYY-MM when period=month
+        const monthVal = document.getElementById("monthPicker")?.value || "";
+        const monthParam = (period === "month" && monthVal) ? `&month=${monthVal}` : "";
         const [sR, mR, pR] = await Promise.all([
-          fetch(`${API}/dashboard/summary?period=${period}`),
-          fetch(`${API}/dashboard/menu?period=${period}`),
-          fetch(`${API}/dashboard/profit?period=${period}`)
+          fetch(`${API}/dashboard/summary?period=${period}${monthParam}`),
+          fetch(`${API}/dashboard/menu?period=${period}${monthParam}`),
+          fetch(`${API}/dashboard/profit?period=${period}${monthParam}`)
         ]);
         if (!sR.ok || !mR.ok) throw new Error("API error");
         const [s, m, p] = await Promise.all([sR.json(), mR.json(), pR.json()]);
@@ -823,9 +874,9 @@
       document.getElementById("kProfitSub").textContent = isProfit ? "กำไร 🎉" : "ขาดทุน ⚠️";
       document.getElementById("profitCard").style.borderLeftColor = profitColor;
       document.getElementById("kExp").textContent = `฿${fmt(p.totalExpense)}`;
-      document.getElementById("kExpSub").textContent = `รายจ่าย${PTH[p.period]}`;
-      document.getElementById("profitBadge").textContent =
-        p.period === "day" ? "รายวัน" : p.period === "week" ? "7 วัน" : "เดือนนี้";
+
+      document.getElementById("profitBadge").textContent = getPTH(p.period, p.startDate);
+      document.getElementById("kExpSub").textContent = `รายจ่าย${getPTH(p.period, p.startDate)}`;
 
       const el = document.getElementById("profitChart");
       if (!p.chart || !p.chart.length) {
@@ -899,9 +950,18 @@
           bars += `<text x="${cx}" y="${labelY}" text-anchor="middle" fill="${pColor}" font-size="10" font-family="DM Mono,monospace" font-weight="600">${profit >= 0 ? "+" : ""}${profit >= 1000 || profit <= -1000 ? (profit / 1000).toFixed(1) + "K" : profit}</text>`;
         }
 
-        // x-axis label
-        const [, mo, dy2] = d.date.split("-");
-        const lbl = p.period === "day" ? d.date : `${+dy2}/${+mo}`;
+        // x-axis label — handle day / date / month
+        let lbl;
+        if (p.period === "history") {
+          const thM = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+          const [ly, lmo] = d.date.split("-").map(Number);
+          lbl = thM[lmo - 1] + String(ly + 543).slice(2);
+        } else if (p.period === "day") {
+          lbl = d.date;
+        } else {
+          const [, mo, dy2] = d.date.split("-");
+          lbl = `${+dy2}/${+mo}`;
+        }
         xLabels += `<text x="${cx}" y="${H - 8}" text-anchor="middle" fill="#8c7b6e" font-size="11" font-family="DM Mono,monospace">${lbl}</text>`;
       });
 
