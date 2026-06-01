@@ -496,21 +496,55 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const API = "https://backend-mahalarb.onrender.com";
-    let allData = [], editMode = false, editId = null, currentCat = "ทั้งหมด";
+    // const API = "https://backend-mahalarb.onrender.com";
+    const API = "http://localhost:3000";
+    let allData = [], allCats = [], editMode = false, editId = null, currentCat = "ทั้งหมด";
 
-    async function fetchMenu() {
-      const res = await fetch(`${API}/menu`);
-      allData = await res.json();
-      renderCats(); renderGrid(allData);
+    // FIX: โหลด categories และ menu แยกกัน
+    // categories จาก /categories → ครบทุกหมวด แม้ยังไม่มีเมนู
+    // menu จาก /menu → ใช้แสดง card และ filter
+    let catListenerAttached = false;
+
+    async function fetchAll() {
+      const [menuRes, catRes] = await Promise.all([
+        fetch(`${API}/menu`),
+        fetch(`${API}/categories`)
+      ]);
+      allData = await menuRes.json();
+      allCats = await catRes.json();
+
+      // attach event delegation once only
+      if (!catListenerAttached) {
+        document.getElementById("catWrap").addEventListener("click", function (e) {
+          const btn = e.target.closest("button[data-cat]");
+          if (!btn) return;
+          const cat = btn.getAttribute("data-cat");
+          currentCat = cat;
+          renderCats();
+          renderGrid(cat === "ทั้งหมด" ? allData : allData.filter(i => i.category_name === cat));
+        });
+        catListenerAttached = true;
+      }
+
+      renderCats();
+      renderGrid(allData);
     }
+
+    // FIX: ใช้ data-cat attribute + event delegation แทน inline onclick string
+    // เพราะ inline onclick กับ category name ที่มีช่องว่าง/อักขระพิเศษทำให้พัง
     function renderCats() {
-      const cats = ["ทั้งหมด", ...new Set(allData.map(i => i.category_name))];
-      document.getElementById("catWrap").innerHTML = cats.map(c =>
-        `<button class="pill ${c === currentCat ? 'active' : ''}" onclick="selectCat('${c}')">${c}</button>`
+      const pills = ["ทั้งหมด", ...allCats.map(c => c.name)];
+      document.getElementById("catWrap").innerHTML = pills.map(c =>
+        `<button class="pill ${c === currentCat ? 'active' : ''}" data-cat="${c.replace(/"/g, '&quot;')}">${c}</button>`
       ).join("");
     }
-    function selectCat(c) { currentCat = c; renderCats(); renderGrid(c === "ทั้งหมด" ? allData : allData.filter(i => i.category_name === c)); }
+
+    function selectCat(c) {
+      currentCat = c;
+      renderCats();
+      renderGrid(c === "ทั้งหมด" ? allData : allData.filter(i => i.category_name === c));
+    }
+
     function renderGrid(data) {
       if (!data.length) { document.getElementById("menuGrid").innerHTML = `<div class="empty"><div class="empty-ico">🍽</div>ไม่พบเมนู</div>`; return; }
       document.getElementById("menuGrid").innerHTML = data.map(item => `
@@ -523,48 +557,92 @@
           <span style="font-size:11px;font-family:var(--mono);background:${((item.price - item.cost) / item.price * 100) >= 40 ? 'rgba(58,138,92,.1)' : 'rgba(194,58,58,.1)'};color:${((item.price - item.cost) / item.price * 100) >= 40 ? 'var(--green)' : 'var(--red)'};padding:3px 10px;border-radius:99px;border:1px solid ${((item.price - item.cost) / item.price * 100) >= 40 ? 'rgba(58,138,92,.2)' : 'rgba(194,58,58,.2)'}">Margin ${Math.round((item.price - item.cost) / item.price * 100)}%</span>
         </div>` : '<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:10px">ยังไม่มีต้นทุน</div>'}
         <div class="card-actions">
-          <button class="btn-edit" onclick='editMenu(${item.id},"${item.name}",${item.price},${item.cost || 0},"${item.category_name}")'>✏️ แก้ไข</button>
-          <button class="btn-del" onclick="deleteMenu(${item.id})">🗑 ลบ</button>
+          <button class="btn-edit" data-id="${item.id}" data-name="${item.name.replace(/"/g, '&quot;')}" data-price="${item.price}" data-cost="${item.cost || 0}" data-cat="${(item.category_name || '').replace(/"/g, '&quot;')}">✏️ แก้ไข</button>
+          <button class="btn-del"  data-id="${item.id}">🗑 ลบ</button>
         </div>
       </div>`).join("");
+
+      // BUG FIX 2: ใช้ event delegation แทน inline onclick
+      // ป้องกัน apostrophe/quotes ใน ชื่อเมนู ทำให้ HTML attribute พัง
+      document.getElementById("menuGrid").addEventListener("click", function handler(e) {
+        const editBtn = e.target.closest(".btn-edit[data-id]");
+        const delBtn = e.target.closest(".btn-del[data-id]");
+        if (editBtn) {
+          editMenu(
+            parseInt(editBtn.dataset.id),
+            editBtn.dataset.name,
+            parseFloat(editBtn.dataset.price),
+            parseFloat(editBtn.dataset.cost),
+            editBtn.dataset.cat
+          );
+        }
+        if (delBtn) deleteMenu(parseInt(delBtn.dataset.id));
+      }, { once: true }); // once:true ป้องกัน listener ซ้อนกันทุกครั้งที่ render
     }
-    function fillCat() {
-      const cats = [...new Set(allData.map(i => i.category_name))];
-      document.getElementById("fCat").innerHTML = `<option value="">-- เลือกหมวดหมู่ --</option>` + cats.map(c => `<option value="${c}">${c}</option>`).join("");
+
+    function fillCat(selectedCat = "") {
+      document.getElementById("fCat").innerHTML =
+        `<option value="">-- เลือกหมวดหมู่ --</option>` +
+        allCats.map(c => `<option value="${c.name}" ${c.name === selectedCat ? "selected" : ""}>${c.name}</option>`).join("");
     }
-    function openForm() { editMode = false; editId = null; document.getElementById("modalTitle").innerHTML = 'เพิ่ม<em style="color:var(--accent);font-style:normal">เมนู</em>'; fillCat(); document.getElementById("fName").value = ""; document.getElementById("fPrice").value = ""; document.getElementById("fCost").value = ""; document.getElementById("fCat").value = ""; document.getElementById("overlay").classList.add("open"); }
-    function editMenu(id, name, price, cost, cat) { editMode = true; editId = id; document.getElementById("modalTitle").innerHTML = 'แก้ไข<em style="color:var(--accent);font-style:normal">เมนู</em>'; fillCat(); document.getElementById("fName").value = name; document.getElementById("fPrice").value = price; document.getElementById("fCost").value = cost || 0; document.getElementById("fCat").value = cat; document.getElementById("overlay").classList.add("open"); }
+
+    function openForm() {
+      editMode = false; editId = null;
+      document.getElementById("modalTitle").innerHTML = 'เพิ่ม<em style="color:var(--accent);font-style:normal">เมนู</em>';
+      fillCat();
+      document.getElementById("fName").value = "";
+      document.getElementById("fPrice").value = "";
+      document.getElementById("fCost").value = "";
+      document.getElementById("overlay").classList.add("open");
+    }
+
+    // BUG FIX 3: ส่ง selectedCat เข้า fillCat() เพื่อ set selected option พร้อมกันทันที
+    // ไม่ต้องรอ fillCat เสร็จแล้วค่อย set fCat.value แยก (race condition)
+    function editMenu(id, name, price, cost, cat) {
+      editMode = true; editId = id;
+      document.getElementById("modalTitle").innerHTML = 'แก้ไข<em style="color:var(--accent);font-style:normal">เมนู</em>';
+      fillCat(cat); // BUG FIX 3: ส่ง cat ไปพร้อมกัน → selected ถูกตั้งค่าทันทีใน HTML
+      document.getElementById("fName").value = name;
+      document.getElementById("fPrice").value = price;
+      document.getElementById("fCost").value = cost || 0;
+      document.getElementById("overlay").classList.add("open");
+    }
+
     function closeForm() { document.getElementById("overlay").classList.remove("open"); }
+
     async function saveMenu() {
       const name = document.getElementById("fName").value.trim();
-      const price = parseFloat(document.getElementById("fPrice").value);  // FIX: parse float
+      const price = parseFloat(document.getElementById("fPrice").value);
+      const costRaw = document.getElementById("fCost").value;
+      const cost = (costRaw === "" || costRaw === null) ? 0 : parseFloat(costRaw);
       const category_name = document.getElementById("fCat").value;
       if (!name || isNaN(price) || price <= 0 || !category_name)
         return toast("กรอกข้อมูลให้ครบ และราคาต้องมากกว่า 0", false);
       try {
         const url = editMode ? `${API}/menu/${editId}` : `${API}/menu`;
         const method = editMode ? "PUT" : "POST";
-        const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, price, category_name }) });
+        const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, price, cost, category_name }) });
         const data = await res.json();
-        // FIX: แสดง error message จาก server แทน error ทั่วไป
         if (!res.ok) return toast(data.error || "เกิดข้อผิดพลาด ❌", false);
         toast(editMode ? "แก้ไขสำเร็จ ✏️" : "เพิ่มเมนูสำเร็จ 🎉", true);
-        closeForm(); fetchMenu();
+        closeForm();
+        fetchAll(); // BUG FIX 1: เปลี่ยนจาก fetchMenu() → fetchAll()
       } catch (e) { toast("เชื่อมต่อ server ไม่ได้ ❌", false); }
     }
+
     async function deleteMenu(id) {
       if (!confirm("ต้องการลบเมนูนี้ใช่ไหม?")) return;
       try {
         const res = await fetch(`${API}/menu/${id}`, { method: "DELETE" });
         const data = await res.json();
-        // FIX: เช็ค HTTP status — 409 = มี order ใช้งานอยู่, 500 = DB error
         if (!res.ok) return toast(data.error || "ลบไม่สำเร็จ ❌", false);
-        toast("ลบสำเร็จ 🗑", true); fetchMenu();
+        toast("ลบสำเร็จ 🗑", true);
+        fetchAll(); // BUG FIX 4: เปลี่ยนจาก fetchMenu() → fetchAll()
       } catch (e) { toast("เชื่อมต่อ server ไม่ได้ ❌", false); }
     }
     function toast(msg, ok) { const el = document.getElementById("toast"); el.textContent = msg; el.className = `toast show ${ok ? 'ok' : 'err'}`; setTimeout(() => el.classList.remove("show"), 2500); }
     function go(p) { window.location.href = p; }
-    fetchMenu();
+    fetchAll(); // FIX: โหลด menu + categories พร้อมกัน
   </script>
 </body>
 

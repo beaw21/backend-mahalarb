@@ -622,7 +622,7 @@
       try {
         const res = await fetch(`${API}/menu`);
         menuData = await res.json();
-        // menuData.sort((a, b) => a.price - b.price);
+        menuData.sort((a, b) => b.price - a.price);
         renderCats(); renderMenuList();
       } catch (e) { document.getElementById("menuList").innerHTML = `<p style="color:var(--muted)">โหลดเมนูไม่ได้: ${e.message}</p>`; }
     }
