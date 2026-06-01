@@ -496,8 +496,7 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    // const API = "https://backend-mahalarb.onrender.com";
-    const API = "http://localhost:3000";
+    const API = "https://backend-mahalarb.onrender.com";
     let allData = [], allCats = [], editMode = false, editId = null, currentCat = "ทั้งหมด";
 
     // FIX: โหลด categories และ menu แยกกัน
@@ -506,14 +505,28 @@
     let catListenerAttached = false;
 
     async function fetchAll() {
-      const [menuRes, catRes] = await Promise.all([
-        fetch(`${API}/menu`),
-        fetch(`${API}/categories`)
-      ]);
-      allData = await menuRes.json();
-      allCats = await catRes.json();
+      try {
+        const [menuRes, catRes] = await Promise.all([
+          fetch(`${API}/menu`),
+          fetch(`${API}/categories`)
+        ]);
 
-      // attach event delegation once only
+        if (!menuRes.ok) throw new Error(`GET /menu failed: ${menuRes.status}`);
+        if (!catRes.ok) throw new Error(`GET /categories failed: ${catRes.status}`);
+
+        allData = await menuRes.json();
+        allCats = await catRes.json();
+
+        if (!Array.isArray(allData)) throw new Error("GET /menu returned invalid data");
+        if (!Array.isArray(allCats)) throw new Error("GET /categories returned invalid data");
+
+      } catch (err) {
+        document.getElementById("menuGrid").innerHTML =
+          `<div class="empty"><div class="empty-ico">❌</div><div class="empty-text">โหลดข้อมูลไม่ได้</div><div class="empty-sub" style="font-family:var(--mono);font-size:12px;color:var(--red)">${err.message}</div></div>`;
+        return;
+      }
+
+      // attach category listener once
       if (!catListenerAttached) {
         document.getElementById("catWrap").addEventListener("click", function (e) {
           const btn = e.target.closest("button[data-cat]");
@@ -545,8 +558,13 @@
       renderGrid(c === "ทั้งหมด" ? allData : allData.filter(i => i.category_name === c));
     }
 
+    let gridListenerAttached = false;
+
     function renderGrid(data) {
-      if (!data.length) { document.getElementById("menuGrid").innerHTML = `<div class="empty"><div class="empty-ico">🍽</div>ไม่พบเมนู</div>`; return; }
+      if (!data.length) {
+        document.getElementById("menuGrid").innerHTML = `<div class="empty"><div class="empty-ico">🍽</div>ไม่พบเมนู</div>`;
+        return;
+      }
       document.getElementById("menuGrid").innerHTML = data.map(item => `
       <div class="menu-card">
         <div class="card-cat">${item.category_name || "—"}</div>
@@ -562,22 +580,26 @@
         </div>
       </div>`).join("");
 
-      // BUG FIX 2: ใช้ event delegation แทน inline onclick
-      // ป้องกัน apostrophe/quotes ใน ชื่อเมนู ทำให้ HTML attribute พัง
-      document.getElementById("menuGrid").addEventListener("click", function handler(e) {
-        const editBtn = e.target.closest(".btn-edit[data-id]");
-        const delBtn = e.target.closest(".btn-del[data-id]");
-        if (editBtn) {
-          editMenu(
-            parseInt(editBtn.dataset.id),
-            editBtn.dataset.name,
-            parseFloat(editBtn.dataset.price),
-            parseFloat(editBtn.dataset.cost),
-            editBtn.dataset.cat
-          );
-        }
-        if (delBtn) deleteMenu(parseInt(delBtn.dataset.id));
-      }, { once: true }); // once:true ป้องกัน listener ซ้อนกันทุกครั้งที่ render
+      // FIX: attach listener ONCE on the container — never removed, never duplicated
+      // renderGrid() only replaces innerHTML (children), not the container itself
+      // so the listener on #menuGrid persists across all re-renders
+      if (!gridListenerAttached) {
+        document.getElementById("menuGrid").addEventListener("click", function (e) {
+          const editBtn = e.target.closest(".btn-edit[data-id]");
+          const delBtn = e.target.closest(".btn-del[data-id]");
+          if (editBtn) {
+            editMenu(
+              parseInt(editBtn.dataset.id),
+              editBtn.dataset.name,
+              parseFloat(editBtn.dataset.price),
+              parseFloat(editBtn.dataset.cost),
+              editBtn.dataset.cat
+            );
+          }
+          if (delBtn) deleteMenu(parseInt(delBtn.dataset.id));
+        });
+        gridListenerAttached = true;
+      }
     }
 
     function fillCat(selectedCat = "") {
